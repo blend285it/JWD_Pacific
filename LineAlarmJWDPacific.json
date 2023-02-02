@@ -1,0 +1,1341 @@
+[
+    {
+        "id": "77d22e3d129653ba",
+        "type": "http in",
+        "z": "da2255948a56730d",
+        "name": "",
+        "url": "/api/access/token",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 120,
+        "y": 80,
+        "wires": [
+            [
+                "916d149b1c7802bb"
+            ]
+        ]
+    },
+    {
+        "id": "52d31b6965a5f52f",
+        "type": "function",
+        "z": "da2255948a56730d",
+        "name": "",
+        "func": "msg.headers = {\n    'Content-Type' : 'application/x-www-form-urlencoded',\n    'Authorization' : 'Bearer ' + msg.payload[0].TOKEN,\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 800,
+        "y": 80,
+        "wires": [
+            [
+                "df505ead59fad9c6"
+            ]
+        ]
+    },
+    {
+        "id": "eb41c8508e01c1e1",
+        "type": "template",
+        "z": "da2255948a56730d",
+        "name": "",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "{{#payload}}\n    SELECT [TOKEN] FROM [dbo].[USERS_MANAGEMENTS] WHERE [USERNAME] = '{{{state}}}'\n{{/payload}}",
+        "output": "str",
+        "x": 480,
+        "y": 80,
+        "wires": [
+            [
+                "ec2a1ceaa541e278"
+            ]
+        ]
+    },
+    {
+        "id": "916d149b1c7802bb",
+        "type": "change",
+        "z": "da2255948a56730d",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "request",
+                "pt": "msg",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 320,
+        "y": 80,
+        "wires": [
+            [
+                "eb41c8508e01c1e1"
+            ]
+        ]
+    },
+    {
+        "id": "df505ead59fad9c6",
+        "type": "http request",
+        "z": "da2255948a56730d",
+        "name": "Revoke TOKEN",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "https://notify-api.line.me/api/revoke",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "senderr": false,
+        "x": 960,
+        "y": 80,
+        "wires": [
+            [
+                "63afda300ebcbdb5"
+            ]
+        ]
+    },
+    {
+        "id": "53ed359686f86ce8",
+        "type": "function",
+        "z": "da2255948a56730d",
+        "name": "request oauth/token",
+        "func": "msg.headers = {\n    'Content-Type' : 'application/x-www-form-urlencoded'\n}\nmsg.payload = {\n    grant_type : 'authorization_code',\n    code : msg.request.code,\n    redirect_uri : 'http://172.16.61.21:1880/api/access/token',\n    client_id : 'Wz6zBOPBk5h9065lzydGbD',\n    client_secret : 'GaV8vC4DckhdYJS1Wbu7A5X5noIhCvLHYxy7DgfhtN9',\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1280,
+        "y": 80,
+        "wires": [
+            [
+                "efdf6cdcd3350c69"
+            ]
+        ]
+    },
+    {
+        "id": "efdf6cdcd3350c69",
+        "type": "http request",
+        "z": "da2255948a56730d",
+        "name": "oauth/token",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "https://notify-bot.line.me/oauth/token",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "senderr": false,
+        "x": 1470,
+        "y": 80,
+        "wires": [
+            [
+                "6c8b299c775583a6"
+            ]
+        ]
+    },
+    {
+        "id": "6c8b299c775583a6",
+        "type": "json",
+        "z": "da2255948a56730d",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 90,
+        "y": 140,
+        "wires": [
+            [
+                "5e11c26da0e7e002",
+                "ff9b26e42a2cf6ee"
+            ]
+        ]
+    },
+    {
+        "id": "ddb46f0d13da4ef7",
+        "type": "function",
+        "z": "da2255948a56730d",
+        "name": "",
+        "func": "msg.payload = {\n    token : msg.payload.access_token,\n    username : msg.request.state,\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 340,
+        "y": 140,
+        "wires": [
+            [
+                "6f3c5208b3560d8e"
+            ]
+        ]
+    },
+    {
+        "id": "5e11c26da0e7e002",
+        "type": "switch",
+        "z": "da2255948a56730d",
+        "name": "",
+        "property": "statusCode",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "200",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 210,
+        "y": 140,
+        "wires": [
+            [
+                "ddb46f0d13da4ef7"
+            ]
+        ]
+    },
+    {
+        "id": "6f3c5208b3560d8e",
+        "type": "template",
+        "z": "da2255948a56730d",
+        "name": "",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "{{#payload}}\n    UPDATE [dbo].[USERS_MANAGEMENTS] SET [TOKEN] = '{{{token}}}' WHERE [USERNAME] = '{{{username}}}'\n    \n    SELECT [USERNAME] FROM [dbo].[USERS_MANAGEMENTS] WHERE [TOKEN] = '{{{token}}}'\n{{/payload}}",
+        "output": "str",
+        "x": 500,
+        "y": 140,
+        "wires": [
+            [
+                "4b33611eef608708"
+            ]
+        ]
+    },
+    {
+        "id": "63afda300ebcbdb5",
+        "type": "json",
+        "z": "da2255948a56730d",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 1110,
+        "y": 80,
+        "wires": [
+            [
+                "53ed359686f86ce8"
+            ]
+        ]
+    },
+    {
+        "id": "b254644bf8432dd6",
+        "type": "http response",
+        "z": "da2255948a56730d",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 1230,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "98b83d2de5900afa",
+        "type": "comment",
+        "z": "da2255948a56730d",
+        "name": "Generate Token",
+        "info": "",
+        "x": 220,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "e44523eff09fd3ba",
+        "type": "function",
+        "z": "da2255948a56730d",
+        "name": "",
+        "func": "\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 860,
+        "y": 140,
+        "wires": [
+            [
+                "fab362ed0791c75a"
+            ]
+        ]
+    },
+    {
+        "id": "fab362ed0791c75a",
+        "type": "template",
+        "z": "da2255948a56730d",
+        "name": "redirect to front",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "<script>\n    window.location.href = 'http://172.16.61.21:80/';\n</script>",
+        "output": "str",
+        "x": 1040,
+        "y": 140,
+        "wires": [
+            [
+                "b254644bf8432dd6",
+                "3cf627859eec7e1d"
+            ]
+        ]
+    },
+    {
+        "id": "ff9b26e42a2cf6ee",
+        "type": "function",
+        "z": "da2255948a56730d",
+        "name": "request headers",
+        "func": "msg.headers = {\n    'Authorization' : 'Bearer ' + msg.payload.access_token\n}\nmsg.token = msg.payload.access_token;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 120,
+        "y": 180,
+        "wires": [
+            [
+                "57462d62a1b71e97"
+            ]
+        ]
+    },
+    {
+        "id": "57462d62a1b71e97",
+        "type": "http request",
+        "z": "da2255948a56730d",
+        "name": "",
+        "method": "GET",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "https://notify-api.line.me/api/status",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "senderr": false,
+        "x": 290,
+        "y": 180,
+        "wires": [
+            [
+                "f0200970cd7f1a0f"
+            ]
+        ]
+    },
+    {
+        "id": "8d19ef476627052f",
+        "type": "template",
+        "z": "da2255948a56730d",
+        "name": "",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "{{#payload}}\n    UPDATE [dbo].[USERS_MANAGEMENTS] SET [TARGET] = '{{{target}}}', [TARGET_TYPE] = '{{{targetType}}}' WHERE [USERNAME] = '{{{username}}}' OR [TOKEN] = '{{{}}}'\n    \n    SELECT [TARGET],[TARGET_TYPE] FROM [dbo].[USERS_MANAGEMENTS] WHERE [TARGET] = '{{{target}}}'\n{{/payload}}",
+        "output": "str",
+        "x": 900,
+        "y": 180,
+        "wires": [
+            [
+                "6872da2530c8b5e2"
+            ]
+        ]
+    },
+    {
+        "id": "f0200970cd7f1a0f",
+        "type": "json",
+        "z": "da2255948a56730d",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 450,
+        "y": 180,
+        "wires": [
+            [
+                "a4e7c59d7f668419",
+                "bc52c29b7c880b1e"
+            ]
+        ]
+    },
+    {
+        "id": "a4e7c59d7f668419",
+        "type": "switch",
+        "z": "da2255948a56730d",
+        "name": "",
+        "property": "statusCode",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "200",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 590,
+        "y": 180,
+        "wires": [
+            [
+                "352fa5d427a5a8c2"
+            ]
+        ]
+    },
+    {
+        "id": "352fa5d427a5a8c2",
+        "type": "function",
+        "z": "da2255948a56730d",
+        "name": "",
+        "func": "msg.payload = {\n    target : msg.payload.target,\n    targetType : msg.payload.targetType,\n    username : msg.req.query.state,\n    token : msg.token,\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 740,
+        "y": 180,
+        "wires": [
+            [
+                "8d19ef476627052f"
+            ]
+        ]
+    },
+    {
+        "id": "d6edcef83d49ef44",
+        "type": "http in",
+        "z": "da2255948a56730d",
+        "name": "",
+        "url": "/api/target/token",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 120,
+        "y": 280,
+        "wires": [
+            [
+                "7f8c4df48cf73bf5"
+            ]
+        ]
+    },
+    {
+        "id": "d05d53d3546c3c91",
+        "type": "template",
+        "z": "da2255948a56730d",
+        "name": "",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "{{#token}}\n    SELECT [USERNAME],[DISPLAY],[TOKEN],[TARGET],[TARGET_TYPE] FROM [dbo].[USERS_MANAGEMENTS]\n    WHERE [USERNAME] = '{{{username}}}'\n{{/token}}",
+        "output": "str",
+        "x": 740,
+        "y": 280,
+        "wires": [
+            [
+                "c9f7ff16ef809b04"
+            ]
+        ]
+    },
+    {
+        "id": "0c3a98cce1392264",
+        "type": "function",
+        "z": "da2255948a56730d",
+        "name": "filter users target",
+        "func": "var output = [];\n\nfor(let i = 0; i < msg.payload.length; i++){\n    output.push({\n        username : msg.payload[i].USERNAME.trim(),\n        display : msg.payload[i].DISPLAY.trim(),\n        target : msg.payload[i].TARGET,\n        targetType : msg.payload[i].TARGET_TYPE,\n    })\n}\nmsg.payload = output;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1090,
+        "y": 280,
+        "wires": [
+            [
+                "44daa7ab47618e8a",
+                "bcc1dd7ad7cd82b6"
+            ]
+        ]
+    },
+    {
+        "id": "44daa7ab47618e8a",
+        "type": "http response",
+        "z": "da2255948a56730d",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 1250,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "7f8c4df48cf73bf5",
+        "type": "function",
+        "z": "da2255948a56730d",
+        "name": "",
+        "func": "var reciveToken = msg.req.headers['authorization'].split(' ')[1];\nmsg.payload = reciveToken;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 300,
+        "y": 280,
+        "wires": [
+            [
+                "477902ba11a202c7"
+            ]
+        ]
+    },
+    {
+        "id": "477902ba11a202c7",
+        "type": "jwt verify",
+        "z": "da2255948a56730d",
+        "name": "",
+        "alg": [
+            "HS256"
+        ],
+        "jwkurl": "",
+        "secret": "obICN5oGcze2s6EIQxmI3RyoHNzrV6EH",
+        "key": "",
+        "signvar": "payload",
+        "storetoken": "token",
+        "x": 450,
+        "y": 280,
+        "wires": [
+            [
+                "4a07c3de2cbd8766"
+            ]
+        ]
+    },
+    {
+        "id": "4a07c3de2cbd8766",
+        "type": "function",
+        "z": "da2255948a56730d",
+        "name": "",
+        "func": "\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 600,
+        "y": 280,
+        "wires": [
+            [
+                "d05d53d3546c3c91"
+            ]
+        ]
+    },
+    {
+        "id": "bcc1dd7ad7cd82b6",
+        "type": "debug",
+        "z": "da2255948a56730d",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1330,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "64dd5c94e46af571",
+        "type": "http in",
+        "z": "da2255948a56730d",
+        "name": "",
+        "url": "/api/remove/token",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 120,
+        "y": 380,
+        "wires": [
+            [
+                "ac13c223b2eefe67"
+            ]
+        ]
+    },
+    {
+        "id": "ac13c223b2eefe67",
+        "type": "function",
+        "z": "da2255948a56730d",
+        "name": "",
+        "func": "const reciveToken = msg.req.headers['authorization'].split(' ')[1];\nmsg.payload = reciveToken;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 300,
+        "y": 380,
+        "wires": [
+            [
+                "2480fcd5bc687079"
+            ]
+        ]
+    },
+    {
+        "id": "2480fcd5bc687079",
+        "type": "jwt verify",
+        "z": "da2255948a56730d",
+        "name": "",
+        "alg": [
+            "HS256"
+        ],
+        "jwkurl": "",
+        "secret": "obICN5oGcze2s6EIQxmI3RyoHNzrV6EH",
+        "key": "",
+        "signvar": "payload",
+        "storetoken": "token",
+        "x": 450,
+        "y": 380,
+        "wires": [
+            [
+                "87418f9166291d11"
+            ]
+        ]
+    },
+    {
+        "id": "87418f9166291d11",
+        "type": "template",
+        "z": "da2255948a56730d",
+        "name": "",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "{{#token}}\n    UPDATE [dbo].[USERS_MANAGEMENTS] SET [TOKEN] = null,[TARGET] = null,[TARGET_TYPE] = null WHERE [USERNAME] = '{{{username}}}'\n    \n    SELECT [TOKEN] FROM [dbo].[USERS_MANAGEMENTS] WHERE [USERNAME] = '{{{username}}}'\n{{/token}}",
+        "output": "str",
+        "x": 600,
+        "y": 380,
+        "wires": [
+            [
+                "d923bee7aeb7d018"
+            ]
+        ]
+    },
+    {
+        "id": "c90e625f1bbca46c",
+        "type": "function",
+        "z": "da2255948a56730d",
+        "name": "response",
+        "func": "var output = {};\nif(msg.payload[0].TOKEN == null){\n    output = {\n        status : \"ok\",\n        message : \"Deleted success\",\n    }\n}else{\n    output = {\n        status : \"failed\",\n        message : \"Deleted failed\"\n    }\n}\nmsg.payload = output;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 920,
+        "y": 380,
+        "wires": [
+            [
+                "3277fd30c1936d9c",
+                "7baf7dd0a8ac9acb"
+            ]
+        ]
+    },
+    {
+        "id": "3277fd30c1936d9c",
+        "type": "http response",
+        "z": "da2255948a56730d",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 1050,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "7baf7dd0a8ac9acb",
+        "type": "debug",
+        "z": "da2255948a56730d",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1170,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "bc52c29b7c880b1e",
+        "type": "debug",
+        "z": "da2255948a56730d",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 570,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "90a51f4816767771",
+        "type": "comment",
+        "z": "da2255948a56730d",
+        "name": "Target Token",
+        "info": "",
+        "x": 190,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "0f50ef4114c0a63d",
+        "type": "comment",
+        "z": "da2255948a56730d",
+        "name": "Remove Token",
+        "info": "",
+        "x": 200,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "4b33611eef608708",
+        "type": "MSSQL-UCGv2",
+        "z": "da2255948a56730d",
+        "mssqlCN": "6344ddc14b2ec98c",
+        "name": "",
+        "query": "",
+        "outField": "payload",
+        "x": 680,
+        "y": 140,
+        "wires": [
+            [
+                "e44523eff09fd3ba"
+            ]
+        ]
+    },
+    {
+        "id": "6872da2530c8b5e2",
+        "type": "MSSQL-UCGv2",
+        "z": "da2255948a56730d",
+        "mssqlCN": "6344ddc14b2ec98c",
+        "name": "",
+        "query": "",
+        "outField": "payload",
+        "x": 1080,
+        "y": 180,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "ec2a1ceaa541e278",
+        "type": "MSSQL-UCGv2",
+        "z": "da2255948a56730d",
+        "mssqlCN": "6344ddc14b2ec98c",
+        "name": "",
+        "query": "",
+        "outField": "payload",
+        "x": 640,
+        "y": 80,
+        "wires": [
+            [
+                "52d31b6965a5f52f"
+            ]
+        ]
+    },
+    {
+        "id": "c9f7ff16ef809b04",
+        "type": "MSSQL-UCGv2",
+        "z": "da2255948a56730d",
+        "mssqlCN": "6344ddc14b2ec98c",
+        "name": "",
+        "query": "",
+        "outField": "payload",
+        "x": 900,
+        "y": 280,
+        "wires": [
+            [
+                "0c3a98cce1392264"
+            ]
+        ]
+    },
+    {
+        "id": "d923bee7aeb7d018",
+        "type": "MSSQL-UCGv2",
+        "z": "da2255948a56730d",
+        "mssqlCN": "6344ddc14b2ec98c",
+        "name": "",
+        "query": "",
+        "outField": "payload",
+        "x": 760,
+        "y": 380,
+        "wires": [
+            [
+                "c90e625f1bbca46c"
+            ]
+        ]
+    },
+    {
+        "id": "69ed4f29140fda8a",
+        "type": "template",
+        "z": "da2255948a56730d",
+        "name": "",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "SELECT [ID]\n      ,room\n      ,[adr]\n      ,message\n      ,[deviceName]\n      ,[LINE]\n      ,[Status]\n      ,[TimeStamp]\nFROM [dbo].[ALARMSLOG] WHERE LINE = 0 \nORDER BY [TimeStamp] ASC",
+        "output": "str",
+        "x": 240,
+        "y": 640,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "6d643d69261b84b9",
+        "type": "MSSQL-UCGv2",
+        "z": "da2255948a56730d",
+        "mssqlCN": "c84d2489f9fe27af",
+        "name": "Xweb UCGv2",
+        "query": "",
+        "outField": "payload",
+        "x": 400,
+        "y": 640,
+        "wires": [
+            [
+                "3686ee3b5b675d34"
+            ]
+        ]
+    },
+    {
+        "id": "e9267de809594d99",
+        "type": "array-iterate",
+        "z": "da2255948a56730d",
+        "name": "",
+        "source_object": "msg",
+        "source_property": "payload",
+        "x": 710,
+        "y": 640,
+        "wires": [
+            [
+                "680c800b97e8fc84",
+                "43acef07ab5ebfad"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "3686ee3b5b675d34",
+        "type": "function",
+        "z": "da2255948a56730d",
+        "name": "dummy",
+        "func": "\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 560,
+        "y": 640,
+        "wires": [
+            [
+                "e9267de809594d99"
+            ]
+        ]
+    },
+    {
+        "id": "680c800b97e8fc84",
+        "type": "function",
+        "z": "da2255948a56730d",
+        "name": "",
+        "func": "var unix_timestamp = parseInt(msg.payload.TimeStamp);\nvar d = new Date(unix_timestamp);\nvar date = (\"00\" + d.getDate()).slice(-2);\nvar month = ('00' + (d.getMonth()+1)).slice(-2);\nvar year = d.getFullYear();\nvar hours = d.getHours();\nvar minutes = \"0\" + d.getMinutes();\n// var seconds = \"0\" + d.getSeconds();\nvar dateTime = hours + \":\" + minutes.substr(-2) +\"  \"+ date +\"/\"+ month +\"/\" + year;\n\nmsg.room = {\n    room : msg.payload.room,\n    adr : msg.payload.adr,\n    deviceName : msg.payload.deviceName,\n    msg : msg.payload.message,\n    state : msg.payload.Status.trim() == 'true' ? true : false,\n    line : msg.payload.LINE,\n    dateTime : dateTime,\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 860,
+        "y": 640,
+        "wires": [
+            [
+                "78c9629f26673e21"
+            ]
+        ]
+    },
+    {
+        "id": "78c9629f26673e21",
+        "type": "template",
+        "z": "da2255948a56730d",
+        "name": "",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "{{#room}}\n    SELECT [TOKEN] FROM [USERS_MANAGEMENTS] WHERE [PERMISSION] LIKE '%{{{room}}}%'\n{{/room}}",
+        "output": "str",
+        "x": 1000,
+        "y": 640,
+        "wires": [
+            [
+                "01077e52e8b11d16"
+            ]
+        ]
+    },
+    {
+        "id": "0a28f8400d4ffd36",
+        "type": "function",
+        "z": "da2255948a56730d",
+        "name": "",
+        "func": "\nlet token = msg.payload;\nlet arr = [];\nlet arry = [];\nfor(let t of token){\n    if(t.TOKEN !== null){\n        arr.push(t.TOKEN);\n    }\n}\n\nconst toFindDuplicate = (arry) => arry.filter((item,index) => arry.indexOf(item) !== index);\n\nlet duplicate = toFindDuplicate(arr);\nif(duplicate.length === 0){\n    for(let  i of arr){\n        arry.push(i);\n    }\n}else{\n    arry.push(Object.values(duplicate)[0]);\n}\n\nmsg.user = arry;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1320,
+        "y": 640,
+        "wires": [
+            [
+                "81f7a5481f42e367"
+            ]
+        ]
+    },
+    {
+        "id": "81f7a5481f42e367",
+        "type": "switch",
+        "z": "da2255948a56730d",
+        "name": "",
+        "property": "user.length",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "neq",
+                "v": "0",
+                "vt": "num"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 1470,
+        "y": 640,
+        "wires": [
+            [
+                "c44d034d50f4e5c3"
+            ]
+        ]
+    },
+    {
+        "id": "c44d034d50f4e5c3",
+        "type": "function",
+        "z": "da2255948a56730d",
+        "name": "notify & check & change Data status",
+        "func": "var Active = {};\nvar InActive = {};\n\nfor(let i in msg.user){\n    if(msg.room.line === false){\n        if(msg.room.state === true){\n            Active = {\n                room : msg.room.room,\n                adr : msg.room.adr,\n                deviceName : msg.room.deviceName,\n                message : msg.room.msg,\n                state : msg.room.state,\n                line : msg.room.line,\n                dateTime : msg.room.dateTime,\n            }\n        }else{\n            InActive = {\n                room : msg.room.room,\n                adr : msg.room.adr,\n                deviceName : msg.room.deviceName,\n                message : msg.room.msg,\n                state : msg.room.state,\n                line : msg.room.line,\n                dateTime : msg.room.dateTime,\n            }\n        }\n    }\n}\n\nif(Object.keys(Active).length > 0 || Object.keys(InActive).length > 0){\n    msg.payload = {\n        Active : Active,\n        ActiveShow : Object.values(Active).length > 0 ? true : false,\n        \n        Stop : InActive,\n        StopShow : Object.values(InActive).length > 0 ? true : false,\n    }\n}\n\nreturn [msg];",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 190,
+        "y": 700,
+        "wires": [
+            [
+                "86270d5aaeae7fb9"
+            ]
+        ]
+    },
+    {
+        "id": "8b52f2221e998b7d",
+        "type": "function",
+        "z": "da2255948a56730d",
+        "name": "shift();",
+        "func": "msg.user.shift();\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1130,
+        "y": 700,
+        "wires": [
+            [
+                "81f7a5481f42e367"
+            ]
+        ]
+    },
+    {
+        "id": "86270d5aaeae7fb9",
+        "type": "template",
+        "z": "da2255948a56730d",
+        "name": "",
+        "field": "template",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "{{#payload.ActiveShow}}\n\n🆘 Alarm Active\n{{#payload.Active}}\n[{{{room}}}]\n→ Address : {{{adr}}}\n→ Device : {{{deviceName}}}\n→ {{{message}}}  🆘 Active\n→  เมื่อ {{{dateTime}}}\n{{/payload.Active}}\n{{/payload.ActiveShow}}\n\n{{#payload.StopShow}}\n\n✅ Alarm InActive\n{{#payload.Stop}}\n[{{{room}}}] \n→ Address : {{{adr}}}\n→ Device : {{{deviceName}}}\n→ {{{message}}}  ✅ InActive\n→  เมื่อ {{{dateTime}}} \n{{/payload.Stop}}\n{{/payload.StopShow}}",
+        "output": "str",
+        "x": 420,
+        "y": 700,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "fb197d87415d22b6",
+        "type": "function",
+        "z": "da2255948a56730d",
+        "name": "Message",
+        "func": "\nmsg.headers = {\n    'Content-Type' : 'application/x-www-form-urlencoded',\n    'Authorization' : 'Bearer ' + msg.user[0],\n}\nmsg.payload = {\n    \"message\" : msg.template\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 560,
+        "y": 700,
+        "wires": [
+            [
+                "3e56d470f6376f06"
+            ]
+        ]
+    },
+    {
+        "id": "3e56d470f6376f06",
+        "type": "http request",
+        "z": "da2255948a56730d",
+        "name": "",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "https://notify-api.line.me/api/notify",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "senderr": false,
+        "x": 710,
+        "y": 700,
+        "wires": [
+            [
+                "3fac18301a06a66a",
+                "b58793eb8e6cd73c"
+            ]
+        ]
+    },
+    {
+        "id": "187250d3c264673e",
+        "type": "debug",
+        "z": "da2255948a56730d",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 650,
+        "y": 760,
+        "wires": []
+    },
+    {
+        "id": "3fac18301a06a66a",
+        "type": "switch",
+        "z": "da2255948a56730d",
+        "name": "",
+        "property": "statusCode",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "200",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 850,
+        "y": 700,
+        "wires": [
+            [
+                "b6df8e863320a1b4",
+                "1962f16e0e032e67"
+            ]
+        ]
+    },
+    {
+        "id": "92e5eb3628826a1a",
+        "type": "function",
+        "z": "da2255948a56730d",
+        "name": "",
+        "func": "if(Object.keys(msg.room).length > 0){\n    return msg;\n}",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 220,
+        "y": 760,
+        "wires": [
+            [
+                "cf6af951bd32b611"
+            ]
+        ]
+    },
+    {
+        "id": "cf6af951bd32b611",
+        "type": "template",
+        "z": "da2255948a56730d",
+        "name": "",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "{{#room}}\n    IF EXISTS(\n    \tSELECT * FROM ALARMSLOG\n    \tWHERE ID = (SELECT max(ID) FROM ALARMSLOG WHERE [room] = '{{{room}}}' AND [adr] = '{{{adr}}}' AND [deviceName] = '{{{deviceName}}}' AND [message] = '{{{msg}}}' AND [Status] = '{{{state}}}' AND [LINE] = 'false')\n    )\n    BEGIN\n        UPDATE ALARMSLOG SET [LINE] = 1 WHERE [adr] = '{{{adr}}}' AND [deviceName] = '{{{deviceName}}}' AND [message] = '{{{msg}}}' AND [LINE] = 0\n        SELECT [LINE] FROM ALARMSLOG WHERE [adr] = '{{{adr}}}' AND [deviceName] = '{{{deviceName}}}' AND [message] = '{{{msg}}}'\n    END\n{{/room}}",
+        "output": "str",
+        "x": 360,
+        "y": 760,
+        "wires": [
+            [
+                "12ea9576d26f7b7f"
+            ]
+        ]
+    },
+    {
+        "id": "b6df8e863320a1b4",
+        "type": "delay",
+        "z": "da2255948a56730d",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "2",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 980,
+        "y": 700,
+        "wires": [
+            [
+                "8b52f2221e998b7d"
+            ]
+        ]
+    },
+    {
+        "id": "1962f16e0e032e67",
+        "type": "json",
+        "z": "da2255948a56730d",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 90,
+        "y": 760,
+        "wires": [
+            [
+                "92e5eb3628826a1a"
+            ]
+        ]
+    },
+    {
+        "id": "12ea9576d26f7b7f",
+        "type": "MSSQL",
+        "z": "da2255948a56730d",
+        "mssqlCN": "9048fd3edc1549c6",
+        "name": "",
+        "query": "",
+        "outField": "payload",
+        "x": 520,
+        "y": 760,
+        "wires": [
+            [
+                "187250d3c264673e"
+            ]
+        ]
+    },
+    {
+        "id": "43acef07ab5ebfad",
+        "type": "delay",
+        "z": "da2255948a56730d",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "3",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 660,
+        "y": 580,
+        "wires": [
+            [
+                "3686ee3b5b675d34"
+            ]
+        ]
+    },
+    {
+        "id": "30932d6adf1b3efd",
+        "type": "cronplus",
+        "z": "da2255948a56730d",
+        "name": "Schedule",
+        "outputField": "payload",
+        "timeZone": "",
+        "persistDynamic": false,
+        "commandResponseMsgOutput": "output1",
+        "outputs": 1,
+        "options": [
+            {
+                "name": "schedule1",
+                "topic": "topic1",
+                "payloadType": "default",
+                "payload": "",
+                "expressionType": "cron",
+                "expression": "0 */3 * * * *",
+                "location": "",
+                "offset": "0",
+                "solarType": "all",
+                "solarEvents": "sunrise,sunset"
+            }
+        ],
+        "x": 100,
+        "y": 640,
+        "wires": [
+            [
+                "69ed4f29140fda8a"
+            ]
+        ]
+    },
+    {
+        "id": "bdfd42f4f95c59ba",
+        "type": "comment",
+        "z": "da2255948a56730d",
+        "name": "Line_Alarm_Suwinthawong",
+        "info": "",
+        "x": 370,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "3cf627859eec7e1d",
+        "type": "debug",
+        "z": "da2255948a56730d",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1230,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "b58793eb8e6cd73c",
+        "type": "debug",
+        "z": "da2255948a56730d",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 850,
+        "y": 760,
+        "wires": []
+    },
+    {
+        "id": "01077e52e8b11d16",
+        "type": "MSSQL-UCGv2",
+        "z": "da2255948a56730d",
+        "mssqlCN": "6344ddc14b2ec98c",
+        "name": "",
+        "query": "",
+        "outField": "payload",
+        "x": 1160,
+        "y": 640,
+        "wires": [
+            [
+                "0a28f8400d4ffd36"
+            ]
+        ]
+    },
+    {
+        "id": "6344ddc14b2ec98c",
+        "type": "MSSQL-UCGv2-CN",
+        "name": "Usermanage",
+        "server": "127.0.0.1",
+        "port": "1433",
+        "encyption": false,
+        "database": "Usermanage",
+        "pool": "50",
+        "connectionTimeout": "16000",
+        "requestTimeout": "40000"
+    },
+    {
+        "id": "c84d2489f9fe27af",
+        "type": "MSSQL-UCGv2-CN",
+        "name": "Suwinthawong",
+        "server": "127.0.0.1",
+        "port": "1433",
+        "encyption": false,
+        "database": "Suwinthawong",
+        "pool": "20",
+        "connectionTimeout": "16000",
+        "requestTimeout": "40000"
+    },
+    {
+        "id": "9048fd3edc1549c6",
+        "type": "MSSQL-CN",
+        "name": "",
+        "server": "127.0.0.1",
+        "encyption": false,
+        "database": "Usermanage"
+    }
+]
