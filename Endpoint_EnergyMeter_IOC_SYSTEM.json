@@ -1,0 +1,312 @@
+[
+    {
+        "id": "fdc1234623a0b851",
+        "type": "http in",
+        "z": "1eb03b3a0e54f844",
+        "name": "",
+        "url": "/api/energy",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 100,
+        "y": 1440,
+        "wires": [
+            [
+                "bcd3f3175bdc22e4"
+            ]
+        ]
+    },
+    {
+        "id": "82da320bfbe3cf6d",
+        "type": "switch",
+        "z": "1eb03b3a0e54f844",
+        "name": "",
+        "property": "req.body",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "nnull"
+            },
+            {
+                "t": "null"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 410,
+        "y": 1440,
+        "wires": [
+            [
+                "280678a21a7c6357"
+            ],
+            [
+                "ec54ff3b37a91338"
+            ]
+        ]
+    },
+    {
+        "id": "ec54ff3b37a91338",
+        "type": "function",
+        "z": "1eb03b3a0e54f844",
+        "name": "",
+        "func": "msg.payload = {}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 620,
+        "y": 1460,
+        "wires": [
+            [
+                "ee66d03c019f3b8e"
+            ]
+        ]
+    },
+    {
+        "id": "bcd3f3175bdc22e4",
+        "type": "change",
+        "z": "1eb03b3a0e54f844",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "body",
+                "pt": "msg",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 270,
+        "y": 1440,
+        "wires": [
+            [
+                "82da320bfbe3cf6d"
+            ]
+        ]
+    },
+    {
+        "id": "ee66d03c019f3b8e",
+        "type": "http response",
+        "z": "1eb03b3a0e54f844",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 2110,
+        "y": 1460,
+        "wires": []
+    },
+    {
+        "id": "d8053975411596ca",
+        "type": "http request",
+        "z": "1eb03b3a0e54f844",
+        "name": "",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "http://127.0.0.1:8086/api/v2/query?orgID={{{params.orgID}}}",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "senderr": false,
+        "x": 1450,
+        "y": 1320,
+        "wires": [
+            [
+                "6904c82daee290e2"
+            ]
+        ]
+    },
+    {
+        "id": "6904c82daee290e2",
+        "type": "function",
+        "z": "1eb03b3a0e54f844",
+        "name": "Convert Response CSV to TimeSeries",
+        "func": "input = msg.payload.split(\"\\n\\r\")\noutput = []\n\nfor(let table of input){\n    row_arr = table.split(\"\\n\")\n    row_arr = row_arr.filter(x => x!==\"\")\n    \n    if(row_arr.length>0){\n        row_output = {}\n        row_index = {}\n        row_key = {}\n        for(let [index,row] of row_arr.entries()){\n            \n            if(index>0){\n                row_output = Object.assign({},row_key)\n            }\n            \n            col = row.substring(1).replace(/\\n|\\r/g,\"\").split(',')\n            \n            for(let [ind,value] of col.entries()){\n                if(index===0){\n                    row_index[ind] = value\n                    row_key[value] = \"\"\n                }else{\n                    if(row_index[ind]!==\"result\"&&row_index[ind]!==\"_time\"&&row_index[ind]!==\"_device\"){\n                        value = value.includes(\".\") ? parseFloat(value): parseInt(value)\n                    }\n                    row_output[row_index[ind]] = value\n                }\n            }\n            \n            if(index>0){\n                output.push(row_output)\n            }\n        }\n    }\n}\n\nmsg.payload = output\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1710,
+        "y": 1320,
+        "wires": [
+            [
+                "73595f1af37c9b2d",
+                "5865784eb704c0b2"
+            ]
+        ]
+    },
+    {
+        "id": "a549fb27e288831d",
+        "type": "template",
+        "z": "1eb03b3a0e54f844",
+        "name": "Query String",
+        "field": "data",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "{{#data}}\n    import \"date\"\n    import \"timezone\"\n    option location = timezone.fixed(offset: 7h)\n    \n    input = {\n        siteName:\"{{{name}}}\",\n        ts_from:{{{from}}},\n        ts_to:{{{to}}},\n        sampling:{{{every}}}\n    }\n        \n    Query = (siteName,ts_from,ts_to,sampling) => {\n        kwh_sum = from(bucket: siteName)\n            |> range(start: ts_from - 86400, stop: ts_to)\n            |> filter(fn: (r) => r[\"_measurement\"] == \"Energy_Meter\")\n            |> filter(fn: (r) => r[\"_field\"] == \"Total_KWH KWh\")\n            |> filter(fn: (r) => r[\"_device\"] == \"Power_Meter_Transformer\" or r[\"_device\"] == \"Power_Meter_Generator\" or r[\"_device\"] == \"Power_Meter_New_Storage\")\n            |> timeShift(duration: -1d, columns: [\"_start\", \"_stop\", \"_time\"])\n            |> aggregateWindow(every: 1d, fn: last, createEmpty: false)\n            |> difference(nonNegative: false, columns: [\"_value\"])\n            |> drop(columns: [\"_start\", \"_stop\", \"_measurement\", \"_field\"])\n            |> pivot(columnKey: [\"_device\"], rowKey: [\"_time\"], valueColumn: \"_value\")\n            |> map(\n                fn: (r) => ({\n                    \"_time\": r._time,\n                    \"total\": if uint(v: r._time) >= 0.0 then r[\"Power_Meter_Transformer\"] + r[\"Power_Meter_Generator\"] + r[\"Power_Meter_New_Storage\"] else 0.0,\n                }),\n            )\n            |> yield(name: \"total_all\")\n        \n        Data = from(bucket: siteName)\n            |> range(start: ts_from-60, stop: ts_to-60)\n            |> filter(fn: (r) => r[\"_measurement\"] == \"Energy_Meter\")\n            |> filter(fn: (r) => r[\"_field\"] == \"Current_L1 A\" or r[\"_field\"] == \"Current_L2 A\" or r[\"_field\"] == \"Current_L3 A\" or r[\"_field\"] == \"Neutral_Current A\" or r[\"_field\"] == \"Total_Active_Power Watt\" or r[\"_field\"] == \"Total_KWH KWh\")\n            |> aggregateWindow(every: 5m, fn: last, createEmpty: false)\n        \n        ActivePower = Data\n            |> filter(fn: (r) => r[\"_field\"] == \"Total_Active_Power Watt\")\n        \n        EnergyUsage = Data\n            |> filter(fn: (r) => r[\"_field\"] == \"Total_KWH KWh\")\n        \n        Current = Data\n            |> filter(fn: (r) => r[\"_field\"] == \"Current_L1 A\" or r[\"_field\"] == \"Current_L2 A\" or r[\"_field\"] == \"Current_L3 A\" or r[\"_field\"] == \"Neutral_Current A\")\n        \n        kW_all = ActivePower\n            |> aggregateWindow(every: sampling, fn: last, createEmpty: false)\n            |> drop(columns: [\"_start\", \"_stop\", \"_measurement\", \"_field\"])\n            |> map(\n                fn: (r) => ({\n                    _time: r._time,\n                    _device: r._device,\n                    _value: float(v: r._value) / 1000.0,\n                }),\n            )\n            |> pivot(columnKey: [\"_device\"], rowKey: [\"_time\"], valueColumn: \"_value\")\n            |> yield(name: \"activepower_all\")\n        \n        kWh_all = EnergyUsage\n            |> aggregateWindow(every: sampling, fn: last, createEmpty: false)\n            |> drop(columns: [\"_start\", \"_stop\", \"_measurement\", \"_field\"])\n            |> difference(nonNegative: false, columns: [\"_value\"])\n            |> map(\n                fn: (r) => ({\n                    _time: r._time,\n                    _device: r._device,\n                    _value: if float(v: r._value) < 0.0 then 0.0 else r._value,\n                }),\n            )\n            |> pivot(columnKey: [\"_device\"], rowKey: [\"_time\"], valueColumn: \"_value\")\n            |> yield(name: \"energy_all\")\n        \n        current_all = Current\n            |> aggregateWindow(every: sampling, fn: last, createEmpty: false)\n            |> map(\n                fn: (r) => ({\n                    _time: r._time,\n                    _device: r._device,\n                    _field: r._field,\n                    _value: float(v: r._value) / 1000.0,\n                }),\n            )\n            |> pivot(columnKey: [\"_field\"], rowKey: [\"_time\"], valueColumn: \"_value\")\n            |> map(\n                fn: (r) => ({\n                    _time: r._time,\n                    _device: r._device,\n                    _value: float(v: r[\"Current_L1 A\"]) + float(v: r[\"Current_L2 A\"]) + float(v: r[\"Current_L3 A\"]) + float(v: r[\"Neutral_Current A\"]) / 4.0,\n                }),\n            )\n            |> pivot(columnKey: [\"_device\"], rowKey: [\"_time\"], valueColumn: \"_value\")\n            |> yield(name: \"current\")\n        \n        kwh_first = EnergyUsage\n            |> first()\n        \n        kwh_last = EnergyUsage\n            |> last()\n        \n        per_all = union(tables: [kwh_first, kwh_last])\n            |> difference(nonNegative: false, columns: [\"_value\"])\n            |> drop(columns: [\"_start\", \"_stop\", \"_measurement\", \"_field\"])\n            |> pivot(columnKey: [\"_device\"], rowKey: [\"_time\"], valueColumn: \"_value\")\n            |> map(\n                fn: (r) => ({\n                    \"Power_Meter_Comp_#1\": r[\"Power_Meter_Comp_#1\"],\n                    \"Power_Meter_Comp_#2\": r[\"Power_Meter_Comp_#2\"],\n                    \"Power_Meter_Comp_#3\": r[\"Power_Meter_Comp_#3\"],\n                    \"Power_Meter_New_Storage\": r[\"Power_Meter_New_Storage\"],\n                    \"Other\": float(v: r[\"Power_Meter_Transformer\"]) + float(v: r[\"Power_Meter_Generator\"]) - float(v: r[\"Power_Meter_Comp_#1\"]) - float(v: r[\"Power_Meter_Comp_#2\"]) - float(v: r[\"Power_Meter_Comp_#3\"]) - float(v: r[\"Power_Meter_New_Storage\"]),\n                }),\n            )\n            |> yield(name: \"per_all\")\n    \n        summary = ActivePower\n            |> filter(fn: (r) => r[\"_device\"] == \"Power_Meter_Comp_#1\" or r[\"_device\"] == \"Power_Meter_Comp_#2\" or r[\"_device\"] == \"Power_Meter_Comp_#3\" or r[\"_device\"] == \"Power_Meter_New_Storage\")\n            |> drop(columns: [\"_start\", \"_stop\", \"_measurement\", \"_field\"])\n            |> map(\n                fn: (r) => ({\n                    ts_type: if date.hour(t: r._time) >= 22 or date.hour(t: r._time) < 9 or date.weekDay(t: r._time) == 0 or date.weekDay(t: r._time) == 6 then \"off\" else \"on\",\n                    ts_date: date.monthDay(t: r._time),\n                    _time: r._time,\n                    _device: r._device,\n                    _value: float(v: r._value) / 1000.0,\n                }),\n            )\n            |> group(columns: [\"host\", \"ts_date\"], mode:\"by\")\n        \n        off_max = summary\n            |> filter(fn: (r) => r[\"ts_type\"] == \"off\")\n            |> max()\n            |> map(\n              fn: (r) => ({\n                  _time: r._time,\n                  _device: r._device,\n                  _value: r._value,\n              }),\n            )\n            |> yield(name: \"off_max\")\n    \n        on_max = summary\n            |> filter(fn: (r) => r[\"ts_type\"] == \"on\")\n            |> max()\n            |> map(\n              fn: (r) => ({\n                  _time: r._time,\n                  _device: r._device,\n                  _value: r._value,\n              }),\n            )\n            |> yield(name: \"on_max\")\n    \n        off_min = summary\n            |> filter(fn: (r) => r[\"ts_type\"] == \"off\")\n            |> min()\n            |> map(\n              fn: (r) => ({\n                  _time: r._time,\n                  _device: r._device,\n                  _value: r._value,\n              }),\n            )\n            |> yield(name: \"off_min\")\n    \n        on_min = summary\n            |> filter(fn: (r) => r[\"ts_type\"] == \"on\")\n            |> min()\n            |> map(\n              fn: (r) => ({\n                  _time: r._time,\n                  _device: r._device,\n                  _value: r._value,\n              }),\n            )\n            |> yield(name: \"on_min\")\n            \n        output = {\n            \"total_all\":kwh_sum,\n            \"activepower_all\":kW_all,\n            \"energy_all\":kWh_all,\n            \"current\":current_all,\n            \"per_all\":per_all,\n            \"summary\":{\n                \"on_peak\":{\n                    \"min\":on_min,\n                    \"max\":on_max,\n                },\n                \"off_peak\":{\n                    \"min\":off_min, \n                    \"max\":off_max,\n                }\n            }\n        }\n    \n        return output\n    }\n    \n    Query(siteName:input.siteName,ts_from:input.ts_from,ts_to:input.ts_to,sampling:input.sampling)\n{{/data}}",
+        "output": "str",
+        "x": 1070,
+        "y": 1340,
+        "wires": [
+            [
+                "0474b3b7e283ad5f"
+            ]
+        ]
+    },
+    {
+        "id": "1453ac79106ab703",
+        "type": "function",
+        "z": "1eb03b3a0e54f844",
+        "name": "Query Params Mahachai",
+        "func": "output = {};\noutput.name = msg.req.body.name\noutput.from = msg.req.body.from/1000\noutput.to = msg.req.body.to/1000\noutput.every = msg.req.body.samp\n\nnow = new Date()\nnow.setSeconds(0)\nnow.setMilliseconds(0)\nnow = Date.parse(now)/1000\n\nif(output.to > now){\n    output.to = now\n}\n\nmsg.data = output\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 770,
+        "y": 1340,
+        "wires": [
+            [
+                "a549fb27e288831d"
+            ]
+        ]
+    },
+    {
+        "id": "73595f1af37c9b2d",
+        "type": "function",
+        "z": "1eb03b3a0e54f844",
+        "name": "analyst data",
+        "func": "input = msg.payload\ndata = {}\noutput = {}\nsummarize = {}\n\nfor (let v of input) {\n    if (!data[v.result]) {\n        data[v.result] = []\n    }\n    data[v.result].push(v)\n}\n\nif(data.total_all){\n    for (let v of data.total_all) {\n        let time = v[\"_time\"]\n        let d = new Date(time)\n        let date = d.getDate()\n        let month = d.getMonth()\n        let year = d.getFullYear()\n        let id = new Date(year, month, date)\n        id = Date.parse(id)\n        if (!summarize[id]) {\n            summarize[id] = {\n                total: v[\"total\"]\n            }\n        } else {\n            d.setDate(date + 1)\n            date = d.getDate()\n            month = d.getMonth()\n            year = d.getFullYear()\n            id = new Date(year, month, date)\n            id = Date.parse(id)\n            summarize[id] = {\n                total: v[\"total\"],\n                today: true \n            }\n        }\n    }\n    \n    for (let v of data.on_min) {\n        let time = v[\"_time\"]\n        let d = new Date(time)\n        let date = d.getDate()\n        let month = d.getMonth()\n        let year = d.getFullYear()\n        let id = new Date(year, month, date)\n        id = Date.parse(id)\n        if(summarize[id]){\n            if(!summarize[id].on_peak){\n                summarize[id].on_peak = {}\n            }\n            summarize[id].on_peak.min = {\n                device: v._device,\n                value: v._value,\n                timestamp: v._time,\n            }\n        }\n    }\n    \n    for (let v of data.on_max) {\n        let time = v[\"_time\"]\n        let d = new Date(time)\n        let date = d.getDate()\n        let month = d.getMonth()\n        let year = d.getFullYear()\n        let id = new Date(year, month, date)\n        id = Date.parse(id)\n        if(summarize[id]){\n            if(!summarize[id].on_peak){\n                summarize[id].on_peak = {}\n            }\n            summarize[id].on_peak.max = {\n                device: v._device,\n                value: v._value,\n                timestamp: v._time,\n            }\n        }\n    }\n    \n    for (let v of data.off_min) {\n        let time = v[\"_time\"]\n        let d = new Date(time)\n        let date = d.getDate()\n        let month = d.getMonth()\n        let year = d.getFullYear()\n        let id = new Date(year, month, date)\n        id = Date.parse(id)\n        if(summarize[id]){\n            if(!summarize[id].off_peak){\n                summarize[id].off_peak = {}\n            }\n            summarize[id].off_peak.min = {\n                device: v._device,\n                value: v._value,\n                timestamp: v._time,\n            }\n        }\n    }\n    \n    for (let v of data.off_max) {\n        let time = v[\"_time\"]\n        let d = new Date(time)\n        let date = d.getDate()\n        let month = d.getMonth()\n        let year = d.getFullYear()\n        let id = new Date(year, month, date)\n        id = Date.parse(id)\n        if(summarize[id]){\n            if(!summarize[id].off_peak){\n                summarize[id].off_peak = {}\n            }\n            summarize[id].off_peak.max = {\n                device: v._device,\n                value: v._value,\n                timestamp: v._time,\n            }\n        }\n    }\n}\n\noutput = Object.assign({}, data)\ndelete output.total_all\ndelete output.on_min\ndelete output.on_max\ndelete output.off_min\ndelete output.off_max\noutput.summarize = Array.from(Object.keys(summarize), key => ({ ...summarize[key], timestamp: parseInt(key) }))\n\nmsg.payload = output\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1970,
+        "y": 1320,
+        "wires": [
+            [
+                "ee66d03c019f3b8e"
+            ]
+        ]
+    },
+    {
+        "id": "280678a21a7c6357",
+        "type": "switch",
+        "z": "1eb03b3a0e54f844",
+        "name": "",
+        "property": "payload.name",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "Suwinthawong",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "Mahachai",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 550,
+        "y": 1320,
+        "wires": [
+            [
+                "83ee49020b0d7ffe"
+            ],
+            [
+                "1453ac79106ab703"
+            ]
+        ]
+    },
+    {
+        "id": "0474b3b7e283ad5f",
+        "type": "function",
+        "z": "1eb03b3a0e54f844",
+        "name": "API Params",
+        "func": "msg.headers = {\n    \"Authorization\":\"Token kSsoC-t75nvc14VK_DU4fDUgJrW1oSy83ThqDBqT3yfOCp-aZL34NfdmQicsp5ZQ_NJfwKkL2AKI3hEKfB_QvA==\",\n    \"Content-Type\":\"application/vnd.flux\",\n}\nmsg.params = {\n    orgID : \"8fc976c27811713b\",\n}\nmsg.payload = msg.data;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1290,
+        "y": 1320,
+        "wires": [
+            [
+                "d8053975411596ca"
+            ]
+        ]
+    },
+    {
+        "id": "3ce58357659610c1",
+        "type": "template",
+        "z": "1eb03b3a0e54f844",
+        "name": "Query String",
+        "field": "data",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "{{#data}}\n    import \"date\"\n    import \"timezone\"\n    option location = timezone.fixed(offset: 7h)\n    \n    input = {\n        siteName:\"{{{name}}}\",\n        ts_from:{{{from}}},\n        ts_to:{{{to}}},\n        sampling:{{{every}}}\n    }\n        \n    Query = (siteName,ts_from,ts_to,sampling) => {\n        kwh_sum = from(bucket: siteName)\n            |> range(start: ts_from - 86400, stop: ts_to)\n            |> filter(fn: (r) => r[\"_measurement\"] == \"Energy_Meter\")\n            |> filter(fn: (r) => r[\"_field\"] == \"Total_kWh KWh\")\n            |> filter(fn: (r) => r[\"_device\"] == \"Energy_meter_Main_MDB\" or r[\"_device\"] == \"Energy_meter_MDB2\")\n            |> timeShift(duration: -1d, columns: [\"_start\", \"_stop\", \"_time\"])\n            |> aggregateWindow(every: 1d, fn: last, createEmpty: false)\n            |> difference(nonNegative: false, columns: [\"_value\"])\n            |> drop(columns: [\"_start\", \"_stop\", \"_measurement\", \"_field\"])\n            |> pivot(columnKey: [\"_device\"], rowKey: [\"_time\"], valueColumn: \"_value\")\n            |> map(\n                fn: (r) => ({\n                    \"_time\": r._time,\n                    \"total\": r[\"Energy_meter_Main_MDB\"] + r[\"Energy_meter_MDB2\"],\n                }),\n            )\n            |> yield(name: \"total_all\")\n        \n        Data = from(bucket: siteName)\n            |> range(start: ts_from-60, stop: ts_to-60)\n            |> filter(fn: (r) => r[\"_measurement\"] == \"Energy_Meter\")\n            |> filter(fn: (r) => r[\"_field\"] == \"Total_Active_Power Watt\" or r[\"_field\"] == \"Total_kWh KWh\" or r[\"_field\"] == \"Current_L3 A\" or r[\"_field\"] == \"Neutral_Current A\" or r[\"_field\"] == \"Current_L1 A\" or r[\"_field\"] == \"Current_L2 A\")\n            |> aggregateWindow(every: 5m, fn: last, createEmpty: false)\n        \n        ActivePower = Data\n            |> filter(fn: (r) => r[\"_field\"] == \"Total_Active_Power Watt\")\n        \n        EnergyUsage = Data\n            |> filter(fn: (r) => r[\"_field\"] == \"Total_kWh KWh\")\n        \n        Current = Data\n            |> filter(fn: (r) => r[\"_field\"] == \"Current_L3 A\" or r[\"_field\"] == \"Neutral_Current A\" or r[\"_field\"] == \"Current_L1 A\" or r[\"_field\"] == \"Current_L2 A\")\n        \n        kW_all = ActivePower\n            |> aggregateWindow(every: sampling, fn: last, createEmpty: false)\n            |> drop(columns: [\"_start\", \"_stop\", \"_measurement\", \"_field\"])\n            |> map(\n                fn: (r) => ({\n                    _time: r._time,\n                    _device: r._device,\n                    _value: float(v: r._value) / 1000.0,\n                }),\n            )\n            |> pivot(columnKey: [\"_device\"], rowKey: [\"_time\"], valueColumn: \"_value\")\n            |> yield(name: \"activepower_all\")\n        \n        kWh_all = EnergyUsage\n            |> aggregateWindow(every: sampling, fn: last, createEmpty: false)\n            |> drop(columns: [\"_start\", \"_stop\", \"_measurement\", \"_field\"])\n            |> difference(nonNegative: false, columns: [\"_value\"])\n            |> map(\n                fn: (r) => ({\n                    _time: r._time,\n                    _device: r._device,\n                    _value: if float(v: r._value) < 0.0 then 0.0 else r._value,\n                }),\n            )\n            |> pivot(columnKey: [\"_device\"], rowKey: [\"_time\"], valueColumn: \"_value\")\n            |> yield(name: \"energy_all\")\n        \n        current_all = Current\n            |> aggregateWindow(every: sampling, fn: last, createEmpty: false)\n            |> map(\n                fn: (r) => ({\n                    _time: r._time,\n                    _device: r._device,\n                    _field: r._field,\n                    _value: float(v: r._value) / 1000.0,\n                }),\n            )\n            |> pivot(columnKey: [\"_field\"], rowKey: [\"_time\"], valueColumn: \"_value\")\n            |> map(\n                fn: (r) => ({\n                    _time: r._time,\n                    _device: r._device,\n                    _value: float(v: r[\"Current_L1 A\"]) + float(v: r[\"Current_L2 A\"]) + float(v: r[\"Current_L3 A\"]) + float(v: r[\"Neutral_Current A\"]) / 4.0,\n                }),\n            )\n            |> pivot(columnKey: [\"_device\"], rowKey: [\"_time\"], valueColumn: \"_value\")\n            |> yield(name: \"current\")\n        \n        kwh_first = EnergyUsage\n            |> first()\n        \n        kwh_last = EnergyUsage\n            |> last()\n        \n        per_all = union(tables: [kwh_first, kwh_last])\n            |> difference(nonNegative: false, columns: [\"_value\"])\n            |> drop(columns: [\"_start\", \"_stop\", \"_measurement\", \"_field\"])\n            |> pivot(columnKey: [\"_device\"], rowKey: [\"_time\"], valueColumn: \"_value\")\n            |> map(\n                fn: (r) => ({\n                    \"Energy_meter_Com.PR1\": r[\"Energy_meter_Com.PR1\"],\n                    \"Energy_meter_Com.PR2\": r[\"Energy_meter_Com.PR2\"],\n                    \"Energy_meter_Com.PR3\": r[\"Energy_meter_Com.PR3\"],\n                    \"Energy_meter_Com.PR4\": r[\"Energy_meter_Com.PR4\"],\n                    \"Other\": float(v: r[\"Energy_meter_Main_MDB\"]) + float(v: r[\"Energy_meter_MDB2\"]) - float(v: r[\"Energy_meter_Com.PR1\"]) - float(v: r[\"Energy_meter_Com.PR2\"]) - float(v: r[\"Energy_meter_Com.PR3\"]) - float(v: r[\"Energy_meter_Com.PR4\"]),\n                }),\n            )\n            |> yield(name: \"per_all\")\n    \n        summary = ActivePower\n            |> filter(fn: (r) => r[\"_device\"] == \"Energy_meter_Com.PR1\" or r[\"_device\"] == \"Energy_meter_Com.PR2\" or r[\"_device\"] == \"Energy_meter_Com.PR3\" or r[\"_device\"] == \"Energy_meter_Com.PR4\")\n            |> drop(columns: [\"_start\", \"_stop\", \"_measurement\", \"_field\"])\n            |> map(\n                fn: (r) => ({\n                    ts_type: if date.hour(t: r._time) >= 22 or date.hour(t: r._time) < 9 or date.weekDay(t: r._time) == 0 or date.weekDay(t: r._time) == 6 then \"off\" else \"on\",\n                    ts_date: date.monthDay(t: r._time),\n                    _time: r._time,\n                    _device: r._device,\n                    _value: float(v: r._value) / 1000.0,\n                }),\n            )\n            |> group(columns: [\"host\", \"ts_date\"], mode:\"by\")\n        \n        off_max = summary\n            |> filter(fn: (r) => r[\"ts_type\"] == \"off\")\n            |> max()\n            |> map(\n              fn: (r) => ({\n                  _time: r._time,\n                  _device: r._device,\n                  _value: r._value,\n              }),\n            )\n            |> yield(name: \"off_max\")\n    \n        on_max = summary\n            |> filter(fn: (r) => r[\"ts_type\"] == \"on\")\n            |> max()\n            |> map(\n              fn: (r) => ({\n                  _time: r._time,\n                  _device: r._device,\n                  _value: r._value,\n              }),\n            )\n            |> yield(name: \"on_max\")\n    \n        off_min = summary\n            |> filter(fn: (r) => r[\"ts_type\"] == \"off\")\n            |> min()\n            |> map(\n              fn: (r) => ({\n                  _time: r._time,\n                  _device: r._device,\n                  _value: r._value,\n              }),\n            )\n            |> yield(name: \"off_min\")\n    \n        on_min = summary\n            |> filter(fn: (r) => r[\"ts_type\"] == \"on\")\n            |> min()\n            |> map(\n              fn: (r) => ({\n                  _time: r._time,\n                  _device: r._device,\n                  _value: r._value,\n              }),\n            )\n            |> yield(name: \"on_min\")\n            \n        output = {\n            \"total_all\":kwh_sum,\n            \"activepower_all\":kW_all,\n            \"energy_all\":kWh_all,\n            \"current\":current_all,\n            \"per_all\":per_all,\n            \"summary\":{\n                \"on_peak\":{\n                    \"min\":on_min,\n                    \"max\":on_max,\n                },\n                \"off_peak\":{\n                    \"min\":off_min, \n                    \"max\":off_max,\n                }\n            }\n        }\n    \n        return output\n    }\n    \n    Query(siteName:input.siteName,ts_from:input.ts_from,ts_to:input.ts_to,sampling:input.sampling)\n{{/data}}",
+        "output": "str",
+        "x": 1070,
+        "y": 1300,
+        "wires": [
+            [
+                "0474b3b7e283ad5f"
+            ]
+        ]
+    },
+    {
+        "id": "83ee49020b0d7ffe",
+        "type": "function",
+        "z": "1eb03b3a0e54f844",
+        "name": "Query Params Suwinthawong",
+        "func": "output = {};\noutput.name = msg.req.body.name\noutput.from = msg.req.body.from/1000\noutput.to = msg.req.body.to/1000\noutput.every = msg.req.body.samp\n\nnow = new Date()\nnow.setSeconds(0)\nnow.setMilliseconds(0)\nnow = Date.parse(now)/1000\n\nif(output.to > now){\n    output.to = now\n}\n\nmsg.data = output\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 790,
+        "y": 1300,
+        "wires": [
+            [
+                "3ce58357659610c1",
+                "c0ef6732e35cb1d6"
+            ]
+        ]
+    },
+    {
+        "id": "5865784eb704c0b2",
+        "type": "debug",
+        "z": "1eb03b3a0e54f844",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1890,
+        "y": 1260,
+        "wires": []
+    }
+]
