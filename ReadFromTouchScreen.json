@@ -1,0 +1,467 @@
+[
+    {
+        "id": "4e21786f1de71e46",
+        "type": "modbus-flex-getter",
+        "z": "8bc67e967e6baca3",
+        "name": "",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "logIOActivities": false,
+        "server": "a15101d814bae221",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": false,
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "x": 570,
+        "y": 120,
+        "wires": [
+            [
+                "b78c1289107d7901",
+                "a264b540d00f828d"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "71e6f7d011aea850",
+        "type": "function",
+        "z": "8bc67e967e6baca3",
+        "name": "touch Suwinthawong",
+        "func": "msg.payload = { \n    'fc': 1, \n    'unitid': 1, \n    'address': 1 , \n    'quantity': 90,\n} \nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 340,
+        "y": 120,
+        "wires": [
+            [
+                "4e21786f1de71e46"
+            ]
+        ]
+    },
+    {
+        "id": "b8fb0816cff782e5",
+        "type": "inject",
+        "z": "8bc67e967e6baca3",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "1",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 150,
+        "y": 40,
+        "wires": [
+            [
+                "f0c5fe012acf6ec3"
+            ]
+        ]
+    },
+    {
+        "id": "f0c5fe012acf6ec3",
+        "type": "function",
+        "z": "8bc67e967e6baca3",
+        "name": "setTime",
+        "func": "var timestamp = new Date().getTime();\nvar datetime = parseInt(timestamp / 1000);\nflow.set(\"timestamp\",datetime);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 300,
+        "y": 40,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "698dcea9c48af545",
+        "type": "debug",
+        "z": "8bc67e967e6baca3",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 910,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "b78c1289107d7901",
+        "type": "modbus-response",
+        "z": "8bc67e967e6baca3",
+        "name": "",
+        "registerShowMax": "90",
+        "x": 770,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "532a9659b1384f10",
+        "type": "inject",
+        "z": "8bc67e967e6baca3",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "0.1",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 130,
+        "y": 120,
+        "wires": [
+            [
+                "71e6f7d011aea850"
+            ]
+        ]
+    },
+    {
+        "id": "cee467ea243301d0",
+        "type": "catch",
+        "z": "8bc67e967e6baca3",
+        "name": "",
+        "scope": [
+            "4e21786f1de71e46"
+        ],
+        "uncaught": false,
+        "x": 530,
+        "y": 200,
+        "wires": [
+            [
+                "923e28f7f84d3ef4"
+            ]
+        ]
+    },
+    {
+        "id": "923e28f7f84d3ef4",
+        "type": "debug",
+        "z": "8bc67e967e6baca3",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 670,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "f2862dc665154044",
+        "type": "function",
+        "z": "8bc67e967e6baca3",
+        "name": "Filter Touch",
+        "func": "var touch = global.get(\"dataScreen\");\n\noutput = {};\noutput[\"Fan_Evap._Condenser_1\"] = {};\noutput[\"Fan_Evap._Condenser_2\"] = {};\noutput[\"Blast_Freezer_1\"] = {};\noutput[\"Blast_Freezer_2\"] = {};\noutput[\"Blast_Freezer_3\"] = {};\noutput[\"VESSEL_1\"] = {};\noutput[\"VESSEL_2\"] = {};\noutput[\"INTER\"] = {};\noutput[\"AirPurger\"] = {};\nlet obj = {};\n\nfor(let [k,v] of Object.entries(touch.data)){\n    if(k.includes(\"Evap1\")){\n        output[\"Fan_Evap._Condenser_1\"][k] = {\n            deviceName : \"Fan_Evap._Condenser_1\",\n            name : k,\n            value : v,\n        }\n    }else if(k.includes(\"Evap2\")){\n        output[\"Fan_Evap._Condenser_2\"][k] = {\n            deviceName : \"Fan_Evap._Condenser_2\",\n            name : k,\n            value : v,\n        }\n    }else if(k.includes(\"INTER\")){\n        output[\"INTER\"][k] = {\n            deviceName : \"INTER\",\n            name : k,\n            value : v,\n        }\n    }else if(k.includes(\"Vessel1\")){\n        output[\"VESSEL_1\"][k] = {\n            deviceName : \"VESSEL_1\",\n            name : k,\n            value : v,\n        }\n    }else if(k.includes(\"Vessel2\")){\n        output[\"VESSEL_2\"][k] = {\n            deviceName : \"VESSEL_2\",\n            name : k,\n            value : v,\n        }\n    }else if(k.includes(\"Blast1\")){\n        output[\"Blast_Freezer_1\"][k] = {\n            deviceName : \"Blast_Freezer_1\",\n            name : k,\n            value : v,\n        }\n    }else if(k.includes(\"Blast2\")){\n        output[\"Blast_Freezer_2\"][k] = {\n            deviceName : \"Blast_Freezer_2\",\n            name : k,\n            value : v,\n        }\n    }else if(k.includes(\"Blast3\")){\n        output[\"Blast_Freezer_3\"][k] = {\n            deviceName : \"Blast_Freezer_3\",\n            name : k,\n            value : v,\n        }\n    }else if(k.includes(\"AirPurger\")){\n        output[\"AirPurger\"][k] = {\n            deviceName : \"AirPurger\",\n            name : k,\n            value : v,\n        }\n    }else{\n        if(!k.includes(\"SPARE\")){\n            obj[k] = {\n                name : k,\n                value : v,\n            }\n        }\n    }\n}\nglobal.set(\"Comp1-2\",obj);\nmsg.payload = output;\nmsg.test = touch;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 410,
+        "y": 280,
+        "wires": [
+            [
+                "7eb5f7e6fed580f2"
+            ]
+        ]
+    },
+    {
+        "id": "2eef165c4f02e9af",
+        "type": "function",
+        "z": "8bc67e967e6baca3",
+        "name": "set flow FanEvap.1-2",
+        "func": "var data = global.get(\"dataScreen\")\nvar timestamp = parseInt(new Date().getTime() / 1000);\nvar output = [];\nvar fan1 = {};\nfan1[\"data\"] = {};\nvar fan2 = {};\nfan2[\"data\"] = {};\nfor(let [k,v] of Object.entries(data)){\n    if(k == \"data\"){\n        for(let [a,b] of Object.entries(v)){\n            if(a.includes(\"Evap1\")){\n                fan1[\"deviceName\"] = \"Fan_Evap._Condenser_1\";\n                fan1[\"data\"][a] = b;\n                fan1[\"timestamp\"] = timestamp;\n            }else if(a.includes(\"Evap2\")){\n                fan2[\"deviceName\"] = \"Fan_Evap._Condenser_2\";\n                fan2[\"data\"][a] = b;\n                fan2[\"timestamp\"] = timestamp;\n            }\n        }\n    }\n}\noutput.push(fan1,fan2);\nglobal.set('Evap',output);\nmsg.payload = output;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 780,
+        "y": 280,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "7eb5f7e6fed580f2",
+        "type": "function",
+        "z": "8bc67e967e6baca3",
+        "name": "set flow",
+        "func": "\nvar blast1 = {};\nblast1[\"data\"] = {};\nvar blast2 = {};\nblast2[\"data\"] = {};\nvar blast3 = {};\nblast3[\"data\"] = {};\nvar vessel1 = {};\nvessel1[\"data\"] = {};\nvar vessel2 = {};\nvessel2[\"data\"] = {};\nvar inter = {};\ninter[\"data\"] = {};\nvar airpurger = {};\nairpurger[\"data\"] = {};\nvar datetime = parseInt(new Date().getTime() / 1000);\nvar timestamp = parseInt(datetime);\n\nfor(let [k,v] of Object.entries(msg.payload)){\n    for(let [a,b] of Object.entries(v)){\n        switch(b.deviceName){\n            case \"Blast_Freezer_1\":\n                blast1[\"deviceName\"] = b.deviceName;\n                blast1[\"data\"][b.name] = b.value;\n                blast1[\"timestamp\"] = timestamp;\n            break;\n            case \"Blast_Freezer_2\":\n                blast2[\"deviceName\"] = b.deviceName;\n                blast2[\"data\"][b.name] = b.value;\n                blast2[\"timestamp\"] = timestamp;\n            break;\n            case \"Blast_Freezer_3\":\n                blast3[\"deviceName\"] = b.deviceName;\n                blast3[\"data\"][b.name] = b.value;\n                blast3[\"timestamp\"] = timestamp;\n            break;\n            case \"VESSEL_1\":\n                vessel1[\"deviceName\"] = b.deviceName;\n                vessel1[\"data\"][b.name] = b.value;\n                vessel1[\"timestamp\"] = timestamp;\n            break;\n            case \"VESSEL_2\":\n                vessel2[\"deviceName\"] = b.deviceName;\n                vessel2[\"data\"][b.name] = b.value;\n                vessel2[\"timestamp\"] = timestamp;\n            break;\n            case \"INTER\":\n                inter[\"deviceName\"] = b.deviceName;\n                inter[\"data\"][b.name] = b.value;\n                inter[\"timestamp\"] = timestamp;\n            break;\n            case \"AirPurger\":\n                airpurger[\"deviceName\"] = b.deviceName;\n                airpurger[\"data\"][b.name] = b.value;\n                airpurger[\"timestamp\"] = timestamp;\n            break;\n            default:\n            break;\n        }\n    }\n}\nvar data = global.get(\"Data\");\n\nvar output = {};\noutput[\"blast1\"] = {};\noutput[\"blast2\"] = {};\noutput[\"blast3\"] = {};\noutput[\"vessel1\"] = {};\noutput[\"vessel2\"] = {};\noutput[\"inter\"] = {};\n\nfor(let index in data){\n    if(data[index].name == blast1.deviceName){\n        if(Object.keys(data[index].data) !== blast1.data){\n            output[\"blast1\"][\"deviceName\"] = blast1.deviceName;\n            output[\"blast1\"][\"data\"] = Object.assign(data[index].data,blast1.data);\n            output[\"blast1\"][\"timestamp\"] = timestamp;\n        }\n    }else if(data[index].name == blast2.deviceName){\n        if(Object.keys(data[index].data) !== blast2.data){\n            output[\"blast2\"][\"deviceName\"] = blast2.deviceName;\n            output[\"blast2\"][\"data\"] = Object.assign(data[index].data,blast2.data);\n            output[\"blast2\"][\"timestamp\"] = timestamp;\n        }\n    }else if(data[index].name == blast3.deviceName){\n        if(Object.keys(data[index].data) !== blast3.data){\n            output[\"blast3\"][\"deviceName\"] = blast3.deviceName;\n            output[\"blast3\"][\"data\"] = Object.assign(data[index].data,blast3.data);\n            output[\"blast3\"][\"timestamp\"] = timestamp;\n        }\n    }else if(data[index].name == vessel1.deviceName){\n        if(Object.keys(data[index].data) !== vessel1.data){\n            output[\"vessel1\"][\"deviceName\"] = vessel1.deviceName;\n            output[\"vessel1\"][\"data\"] = Object.assign(data[index].data,vessel1.data);\n            output[\"vessel1\"][\"timestamp\"] = timestamp;\n        }\n    }else if(data[index].name == vessel2.deviceName){\n        if(Object.keys(data[index].data) !== vessel2.data){\n            output[\"vessel2\"][\"deviceName\"] = vessel2.deviceName;\n            output[\"vessel2\"][\"data\"] = Object.assign(data[index].data,vessel2.data);\n            output[\"vessel2\"][\"timestamp\"] = timestamp;\n        }\n    }else if(data[index].name == inter.deviceName){\n        if(Object.keys(data[index].data) !== inter.data){\n            output[\"inter\"][\"deviceName\"] = inter.deviceName;\n            output[\"inter\"][\"data\"] = Object.assign(data[index].data,inter.data);\n            output[\"inter\"][\"timestamp\"] = timestamp;\n        }\n    }else{\n        output[index] = {};\n        output[index][\"deviceName\"] = data[index].name;\n        output[index][\"data\"] = data[index].data;\n        output[index][\"timestamp\"] = timestamp;\n    }\n}\nglobal.set(\"dataScreens\",Object.values(output))\nmsg.payload = Object.values(output);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 580,
+        "y": 280,
+        "wires": [
+            [
+                "2eef165c4f02e9af"
+            ]
+        ]
+    },
+    {
+        "id": "a264b540d00f828d",
+        "type": "function",
+        "z": "8bc67e967e6baca3",
+        "name": "Do not Edit",
+        "func": "let mapsData = {};\nlet mapsData1 = {};\nlet output = {};\nif(msg.payload.length > 0){\n    for(let i = 0; i < 90; i++){\n        mapsData = {\n            \"RunComp1\" : msg.payload[0] == true ? 1 : 0,\n            \"OlComp1\" : msg.payload[1] == true ? 1 : 0,\n            \"RunComp2\" : msg.payload[2] == true ? 1 : 0,\n            \"OlComp2\" : msg.payload[3] == true ? 1 : 0,\n            \"Evap1WaterPump\" : msg.payload[4] == true ? 1 : 0,\n            \"Evap1PumpOL\" : msg.payload[5] == true ? 1 : 0,\n            \"Evap1Fan_1\" : msg.payload[6] == true ? 1 : 0,\n            \"Evap1Fan_2\" : msg.payload[7] == true ? 1 : 0,\n            \"Evap1Fan_3\" : msg.payload[8] == true ? 1 : 0,\n            \"Evap1Fan_4\" : msg.payload[9] == true ? 1 : 0,\n            \"Evap1Fan_5\" : msg.payload[10] == true ? 1 : 0,\n            \"Evap1Fan_6\" : msg.payload[11] == true ? 1 : 0,\n            \"Evap1Fan_7\" : msg.payload[12] == true ? 1 : 0,\n            \"Evap1Fan_8\" : msg.payload[13] == true ? 1 : 0,\n            \"Evap1Fan_9\" : msg.payload[14] == true ? 1 : 0,\n            \"Evap1Fan_10\" : msg.payload[15] == true ? 1 : 0,\n            \"Evap1FanOL\" : msg.payload[16] == true ? 1 : 0,\n            \"Evap2WaterPump\" : msg.payload[17] == true ? 1 : 0,\n            \"Evap2PumpOL\" : msg.payload[18] == true ? 1 : 0,\n            \"Evap2Fan_1\" : msg.payload[19] == true ? 1 : 0,\n            \"Evap2Fan_2\" : msg.payload[20] == true ? 1 : 0,\n            \"Evap2Fan_3\" : msg.payload[21] == true ? 1 : 0,\n            \"Evap2Fan_4\" : msg.payload[22] == true ? 1 : 0,\n            \"Evap2Fan_5\" : msg.payload[23] == true ? 1 : 0,\n            \"Evap2Fan_6\" : msg.payload[24] == true ? 1 : 0,\n            \"Evap2Fan_7\" : msg.payload[25] == true ? 1 : 0,\n            \"Evap2Fan_8\" : msg.payload[26] == true ? 1 : 0,\n            \"Evap2Fan_9\" : msg.payload[27] == true ? 1 : 0,\n            \"Evap2Fan_10\" : msg.payload[28] == true ? 1 : 0,\n            \"Evap2FanOL\" : msg.payload[29] == true ? 1 : 0,\n            \"AirPurgerMainLqSV\" : msg.payload[30] == true ? 1 : 0,\n            \"AirPurgerBypassSV\" : msg.payload[31] == true ? 1 : 0,\n            \"Vessel1_DiffPs\" : msg.payload[32] == true ? 1 : 0,\n            \"Vessel1_Pump1Run\" : msg.payload[33] == true ? 1 : 0,\n            \"Vessel1_Pump1OL\" : msg.payload[34] == true ? 1 : 0,\n            \"Vessel1_Pump2Run\" : msg.payload[35] == true ? 1 : 0,\n            \"Vessel1_Pump2OL\" : msg.payload[36] == true ? 1 : 0,\n            \"Vessel1_Pump3Run\" : msg.payload[37] == true ? 1 : 0,\n            \"Vessel1_Pump3OL\" : msg.payload[38] == true ? 1 : 0,\n            \"Vessel1_LqSV\" : msg.payload[39] == true ? 1 : 0,\n            \"Vessel1_HiLvCutOff\" : msg.payload[40] == true ? 1 : 0,\n            \"InterLqSv\" : msg.payload[41] == true ? 1 : 0,\n            \"InterHiLvCutOff\" : msg.payload[42] == true ? 1 : 0,\n            \"SPARE_1\" : msg.payload[43] == true ? 1 : 0,\n            \"SPARE_2\" : msg.payload[44] == true ? 1 : 0,\n            \"Vessel2_DiffPs\" : msg.payload[45] == true ? 1 : 0,\n            \"Vessel2_Pump1Run\" : msg.payload[46] == true ? 1 : 0,\n            \"Vessel2_Pump1OL\" : msg.payload[47] == true ? 1 : 0,\n            \"Vessel2_Pump2Run\" : msg.payload[48] == true ? 1 : 0,\n            \"Vessel2_Pump2OL\" : msg.payload[49] == true ? 1 : 0,\n            \"Vessel2_Pump3Run\" : msg.payload[50] == true ? 1 : 0,\n            \"Vessel2_Pump3OL\" : msg.payload[51] == true ? 1 : 0,\n            \"Vessel2_LQSV\" : msg.payload[52] == true ? 1 : 0,\n            \"Vessel2_HiLVcutOff\" : msg.payload[53] == true ? 1 : 0,\n            \"Blast1_Defrost\" : msg.payload[54] == true ? 1 : 0,\n            \"Blast1_suction\" : msg.payload[55] == true ? 1 : 0,\n            \"Blast1_Lqsv\" : msg.payload[56] == true ? 1 : 0,\n            \"Blast1_Fan1\" : msg.payload[57] == true ? 1 : 0,\n            \"Blast1_Fan2\" : msg.payload[58] == true ? 1 : 0,\n            \"Blast1_Fan3\" : msg.payload[59] == true ? 1 : 0,\n            \"Blast1_Fan4\" : msg.payload[60] == true ? 1 : 0,\n            \"Blast1_Fan5\" : msg.payload[61] == true ? 1 : 0,\n            \"Blast1_Fan6\" : msg.payload[62] == true ? 1 : 0,\n            \"Blast1_Fan13OL\" : msg.payload[63] == true ? 1 : 0,\n            \"Blast1_Fan46OL\" : msg.payload[64] == true ? 1 : 0,\n            \"Blast2_Defrost\" : msg.payload[65] == true ? 1 : 0,\n            \"Blast2_suction\" : msg.payload[66] == true ? 1 : 0,\n            \"Blast2_Lqsv\" : msg.payload[67] == true ? 1 : 0,\n            \"Blast2_Fan1\" : msg.payload[68] == true ? 1 : 0,\n            \"Blast2_Fan2\" : msg.payload[69] == true ? 1 : 0,\n            \"Blast2_Fan3\" : msg.payload[70] == true ? 1 : 0,\n            \"Blast2_Fan4\" : msg.payload[71] == true ? 1 : 0,\n            \"Blast2_Fan5\" : msg.payload[72] == true ? 1 : 0,\n            \"Blast2_Fan6\" : msg.payload[73] == true ? 1 : 0,\n            \"Blast2_Fan13OL\" : msg.payload[74] == true ? 1 : 0,\n            \"Blast2_Fan46OL\" : msg.payload[75] == true ? 1 : 0,\n            \"Blast3_Defrost\" : msg.payload[76] == true ? 1 : 0,\n            \"Blast3_suction\" : msg.payload[77] == true ? 1 : 0,\n            \"Blast3_Lqsv\" : msg.payload[78] == true ? 1 : 0,\n            \"Blast3_Fan1\" : msg.payload[79] == true ? 1 : 0,\n            \"Blast3_Fan2\" : msg.payload[80] == true ? 1 : 0,\n            \"Blast3_Fan3\" : msg.payload[81] == true ? 1 : 0,\n            \"Blast3_Fan4\" : msg.payload[82] == true ? 1 : 0,\n            \"Blast3_Fan5\" : msg.payload[83] == true ? 1 : 0,\n            \"Blast3_Fan6\" : msg.payload[84] == true ? 1 : 0,\n            \"Blast3_Fan13OL\" : msg.payload[85] == true ? 1 : 0,\n            \"Blast3_Fan46OL\" : msg.payload[86] == true ? 1 : 0,\n            \"SPARE_3\" : msg.payload[87] == true ? 1 : 0,\n            \"SPARE_4\" : msg.payload[88] == true ? 1 : 0,\n            \"SPARE_5\" : msg.payload[89] == true ? 1 : 0,\n        }\n        mapsData1 = {\n            \"RunComp1\" : msg.payload[0] == true ? 1 : 0,\n            \"OlComp1\" : msg.payload[1] == true ? 1 : 0,\n            \"RunComp2\" : msg.payload[2] == true ? 1 : 0,\n            \"OlComp2\" : msg.payload[3] == true ? 1 : 0,\n            \"Evap1Water_Pump_Run\" : msg.payload[4] == true ? 1 : 0,\n            \"Evap1Pump_Overload\" : msg.payload[5] == true ? 1 : 0,\n            \"Evap1Fan_1_Run\" : msg.payload[6] == true ? 1 : 0,\n            \"Evap1Fan_2_Run\" : msg.payload[7] == true ? 1 : 0,\n            \"Evap1Fan_3_Run\" : msg.payload[8] == true ? 1 : 0,\n            \"Evap1Fan_4_Run\" : msg.payload[9] == true ? 1 : 0,\n            \"Evap1Fan_5_Run\" : msg.payload[10] == true ? 1 : 0,\n            \"Evap1Fan_6_Run\" : msg.payload[11] == true ? 1 : 0,\n            \"Evap1Fan_7_Run\" : msg.payload[12] == true ? 1 : 0,\n            \"Evap1Fan_8_Run\" : msg.payload[13] == true ? 1 : 0,\n            \"Evap1Fan_9_Run\" : msg.payload[14] == true ? 1 : 0,\n            \"Evap1Fan_10_Run\" : msg.payload[15] == true ? 1 : 0,\n            \"Evap1Fan_Overload\" : msg.payload[16] == true ? 1 : 0,\n            \"Evap2Water_Pump_Run\" : msg.payload[17] == true ? 1 : 0,\n            \"Evap2Pump_Overload\" : msg.payload[18] == true ? 1 : 0,\n            \"Evap2Fan_1_Run\" : msg.payload[19] == true ? 1 : 0,\n            \"Evap2Fan_2_Run\" : msg.payload[20] == true ? 1 : 0,\n            \"Evap2Fan_3_Run\" : msg.payload[21] == true ? 1 : 0,\n            \"Evap2Fan_4_Run\" : msg.payload[22] == true ? 1 : 0,\n            \"Evap2Fan_5_Run\" : msg.payload[23] == true ? 1 : 0,\n            \"Evap2Fan_6_Run\" : msg.payload[24] == true ? 1 : 0,\n            \"Evap2Fan_7_Run\" : msg.payload[25] == true ? 1 : 0,\n            \"Evap2Fan_8_Run\" : msg.payload[26] == true ? 1 : 0,\n            \"Evap2Fan_9_Run\" : msg.payload[27] == true ? 1 : 0,\n            \"Evap2Fan_10_Run\" : msg.payload[28] == true ? 1 : 0,\n            \"Evap2Fan_Overload\" : msg.payload[29] == true ? 1 : 0,\n            \"AirPurger_MainLiquid_SV\" : msg.payload[30] == true ? 1 : 0,\n            \"AirPurger_Bypass_SV\" : msg.payload[31] == true ? 1 : 0,\n            \"Vessel1_Diff_Pressure\" : msg.payload[32] == true ? 1 : 0,\n            \"Vessel1_Pump_1_Run\" : msg.payload[33] == true ? 1 : 0,\n            \"Vessel1_Pump_1_Overload\" : msg.payload[34] == true ? 1 : 0,\n            \"Vessel1_Pump_2_Run\" : msg.payload[35] == true ? 1 : 0,\n            \"Vessel1_Pump_2_Overload\" : msg.payload[36] == true ? 1 : 0,\n            \"Vessel1_Pump_3_Run\" : msg.payload[37] == true ? 1 : 0,\n            \"Vessel1_Pump_3_Overload\" : msg.payload[38] == true ? 1 : 0,\n            \"Vessel1_Liquid_SV\" : msg.payload[39] == true ? 1 : 0,\n            \"Vessel1_HiLvCutOff\" : msg.payload[40] == true ? 1 : 0,\n            \"INTER_Liquid_SV\" : msg.payload[41] == true ? 1 : 0,\n            \"INTER_HiLvCutOff\" : msg.payload[42] == true ? 1 : 0,\n            \"SPARE_1\" : msg.payload[43] == true ? 1 : 0,\n            \"SPARE_2\" : msg.payload[44] == true ? 1 : 0,\n            \"Vessel2_Diff_Pressure\" : msg.payload[45] == true ? 1 : 0,\n            \"Vessel2_Pump_1_Run\" : msg.payload[46] == true ? 1 : 0,\n            \"Vessel2_Pump_1_Overload\" : msg.payload[47] == true ? 1 : 0,\n            \"Vessel2_Pump_2_Run\" : msg.payload[48] == true ? 1 : 0,\n            \"Vessel2_Pump_2_Overload\" : msg.payload[49] == true ? 1 : 0,\n            \"Vessel2_Pump_3_Run\" : msg.payload[50] == true ? 1 : 0,\n            \"Vessel2_Pump_3_Overload\" : msg.payload[51] == true ? 1 : 0,\n            \"Vessel2_Liquid_SV\" : msg.payload[52] == true ? 1 : 0,\n            \"Vessel2_HiLVcutOff\" : msg.payload[53] == true ? 1 : 0,\n            \"Blast1_Defrost\" : msg.payload[54] == true ? 1 : 0,\n            \"Blast1_suction_SV\" : msg.payload[55] == true ? 1 : 0,\n            \"Blast1_Liquid_SV\" : msg.payload[56] == true ? 1 : 0,\n            \"Blast1_Fan_1_Run\" : msg.payload[57] == true ? 1 : 0,\n            \"Blast1_Fan_2_Run\" : msg.payload[58] == true ? 1 : 0,\n            \"Blast1_Fan_3_Run\" : msg.payload[59] == true ? 1 : 0,\n            \"Blast1_Fan_4_Run\" : msg.payload[60] == true ? 1 : 0,\n            \"Blast1_Fan_5_Run\" : msg.payload[61] == true ? 1 : 0,\n            \"Blast1_Fan_6_Run\" : msg.payload[62] == true ? 1 : 0,\n            \"Blast1_Fan_13_Overload\" : msg.payload[63] == true ? 1 : 0,\n            \"Blast1_Fan_46_Overload\" : msg.payload[64] == true ? 1 : 0,\n            \"Blast2_Defrost\" : msg.payload[65] == true ? 1 : 0,\n            \"Blast2_suction_SV\" : msg.payload[66] == true ? 1 : 0,\n            \"Blast2_Liquid_SV\" : msg.payload[67] == true ? 1 : 0,\n            \"Blast2_Fan_1_Run\" : msg.payload[68] == true ? 1 : 0,\n            \"Blast2_Fan_2_Run\" : msg.payload[69] == true ? 1 : 0,\n            \"Blast2_Fan_3_Run\" : msg.payload[70] == true ? 1 : 0,\n            \"Blast2_Fan_4_Run\" : msg.payload[71] == true ? 1 : 0,\n            \"Blast2_Fan_5_Run\" : msg.payload[72] == true ? 1 : 0,\n            \"Blast2_Fan_6_Run\" : msg.payload[73] == true ? 1 : 0,\n            \"Blast2_Fan_13_Overload\" : msg.payload[74] == true ? 1 : 0,\n            \"Blast2_Fan_46_Overload\" : msg.payload[75] == true ? 1 : 0,\n            \"Blast3_Defrost\" : msg.payload[76] == true ? 1 : 0,\n            \"Blast3_suction_SV\" : msg.payload[77] == true ? 1 : 0,\n            \"Blast3_Liquid_SV\" : msg.payload[78] == true ? 1 : 0,\n            \"Blast3_Fan_1_Run\" : msg.payload[79] == true ? 1 : 0,\n            \"Blast3_Fan_2_Run\" : msg.payload[80] == true ? 1 : 0,\n            \"Blast3_Fan_3_Run\" : msg.payload[81] == true ? 1 : 0,\n            \"Blast3_Fan_4_Run\" : msg.payload[82] == true ? 1 : 0,\n            \"Blast3_Fan_5_Run\" : msg.payload[83] == true ? 1 : 0,\n            \"Blast3_Fan_6_Run\" : msg.payload[84] == true ? 1 : 0,\n            \"Blast3_Fan_13_Overlaod\" : msg.payload[85] == true ? 1 : 0,\n            \"Blast3_Fan_46_Overload\" : msg.payload[86] == true ? 1 : 0,\n            \"SPARE_3\" : msg.payload[87] == true ? 1 : 0,\n            \"SPARE_4\" : msg.payload[88] == true ? 1 : 0,\n            \"SPARE_5\" : msg.payload[89] == true ? 1 : 0,\n        }\n    }\n}\n\nvar data = {}\n\nif(Object.keys(mapsData).length > 0){\n    output = {\n        name : \"TouchScreen\",\n        adr : \"172.16.46.23\",\n        data : mapsData,\n    }\n    flow.set(\"TouchScreen\",output);\n    global.set(\"TouchScreen\",output);\n    data = {\n        name : \"TouchScreen\",\n        adr : \"172.16.46.23\",\n        data : mapsData1,\n    }\n    global.set(\"dataScreen\",data);\n}\nmsg.payload = data;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 770,
+        "y": 120,
+        "wires": [
+            [
+                "698dcea9c48af545"
+            ]
+        ]
+    },
+    {
+        "id": "73be0e6303c1c7a3",
+        "type": "function",
+        "z": "8bc67e967e6baca3",
+        "name": "Filter Data",
+        "func": "var data = global.get(\"xjaData\") || {};\n\nconst finded = (name) =>{\n    for(let i in data){\n        for(let [k,v] of Object.entries(data[i].data)){\n            if(k == name){\n                return {\n                    name : k,\n                    value : v,\n                };\n            }\n        }\n    }\n}\nvar xja = {};\nxja[\"Blast_Freezer_4\"] = {};\nxja[\"Blast_Freezer_5\"] = {};\nxja[\"Blast_Freezer_6\"] = {};\nxja[\"Cold_Storage_9-1\"] = {};\nxja[\"Cold_Storage_9-2\"] = {};\nxja[\"Cold_Storage_9-3\"] = {};\nxja[\"Cold_Storage_10\"] = {};\nxja[\"Cold_Storage_11-1\"] = {};\nxja[\"Cold_Storage_11-2\"] = {};\nxja[\"Cold_Storage_11-3\"] = {};\nxja[\"Cold_Storage_11-4\"] = {};\nxja[\"Cold_Storage_11-5\"] = {};\nxja[\"Cold_Storage_8\"] = {};\nxja[\"Compressor_No.3\"] = {};\nxja[\"Compressor_No.4\"] = {};\nxja[\"Loading_3\"] = {};\nxja[\"Loading_4\"] = {};\nxja[\"VESSEL_3\"] = {};\nxja[\"Fan_Evap._Condenser_3\"] = {};\nxja[\"Fan_Evap._Condenser_4\"] = {};\nxja[\"Ante_Room_3\"] = {};\n\nfor(let i = 0; i < data.length; i++){\n    if(data[i].adr == \"192.168.50.155:502:51\"){\n        for(let [k,v] of Object.entries(data[i].data)){\n            if(k !== \"On\" && \n                k !== \"Alarm\" &&\n                k !== \"No-Link\"\n            ){\n                xja[\"Compressor_No.3\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                    deviceName : \"Compressor_No.3\",\n                    adr : data[i].adr,\n                    name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                    value : v,\n                }\n            }\n        }\n    }\n    if(data[i].adr == \"192.168.50.155:502:52\"){\n        for(let [k,v] of Object.entries(data[i].data)){\n            xja[\"Fan_Evap._Condenser_3\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                deviceName : \"Fan_Evap._Condenser_3\",\n                adr : data[i].adr,\n                name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                value : v,\n            }\n        }\n    }\n    if(data[i].adr == \"192.168.50.155:502:53\"){\n        for(let [k,v] of Object.entries(data[i].data)){\n            let dataFind = finded(k);\n            if(k == dataFind.name){\n                let blast4 = k.includes(\"Freezer_4\");\n                if(blast4 == false){\n                    if(k !== \"On\" && k !== \"No-Link\"){\n                        xja[\"VESSEL_3\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                            deviceName : \"VESSEL_3\",\n                            adr : data[i].adr,\n                            name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                            value : v\n                        }\n                    }\n                }\n            }\n        }\n    }\n    if(data[i].adr == \"192.168.50.155:502:54\"){\n        for(let [k,v] of Object.entries(data[i].data)){\n            let dataFind = finded(k);\n            if(k == dataFind.name){\n                if(k.includes(\"Freezer_4\")){\n                    xja[\"Blast_Freezer_4\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Blast_Freezer_4\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v\n                    }\n                }\n            }\n        }\n    }\n    if(data[i].adr == \"192.168.50.155:502:55\"){\n        for(let [k,v] of Object.entries(data[i].data)){\n            let dataFind = finded(k);\n            if(k == dataFind.name){\n                let has = k.includes(\"Freezer_4\");\n                let blast5 = k.includes(\"Freezer_5\");\n                if(has == true){\n                    xja[\"Blast_Freezer_4\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                    \tdeviceName : \"Blast_Freezer_4\",\n                    \tadr : data[i].adr,\n                    \tname : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                    \tvalue : v\n                    }\n                }\n                if(blast5 == true){\n                    xja[\"Blast_Freezer_5\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Blast_Freezer_5\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }\n            }\n        }\n    }\n    if(data[i].adr == \"192.168.50.155:502:56\"){\n        for(let [k,v] of Object.entries(data[i].data)){\n            let dataFind = finded(k);\n            if(k == dataFind.name){\n                let blast6 = k.includes(\"Freezer_6\");\n                if(k.includes(\"Freezer 5\")){\n                    xja[\"Blast_Freezer_5\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Blast_Freezer_5\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }else if(k.includes(\"Freezer_6\")){\n                    xja[\"Blast_Freezer_6\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Blast_Freezer_6\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }\n            }\n        }\n    }\n    if(data[i].adr == \"192.168.50.155:502:57\"){\n        for(let [k,v] of Object.entries(data[i].data)){\n            let dataFind = finded(k);\n            if(k == dataFind.name){\n                if(k.includes(\"Freezer_6\")){\n                    xja[\"Blast_Freezer_6\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Blast_Freezer_6\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }\n            }\n        }\n    }\n    if(data[i].adr == \"192.168.50.155:502:58\"){\n        for(let [k,v] of Object.entries(data[i].data)){\n            let dataFind = finded(k);\n            if(k == dataFind.name){\n                let blast6 = k.includes(\"Freezer_6\");\n                if(blast6 == true){\n                    xja[\"Blast_Freezer_6\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Blast_Freezer_6\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }\n            }\n        }\n    }\n    if(data[i].adr == \"192.168.50.155:502:59\"){\n        for(let [k,v] of Object.entries(data[i].data)){\n            let dataFind = finded(k);\n            if(k == dataFind.name){\n                let Cold91 = k.includes(\"Storage_9-1\");\n                let Cold92 = k.includes(\"Storage_9-2\");\n                if(Cold91 == false && Cold92 == false){\n                    xja[\"Compressor_No.4\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Compressor_No.4\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }else{\n                    if(Cold91 == true){\n                        xja[\"Cold_Storage_9-1\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                            deviceName : \"Cold_Storage_9-1\",\n                            adr : data[i].adr,\n                            name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                            value : v,\n                        }\n                    }else if(Cold92 == true){\n                        xja[\"Cold_Storage_9-2\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                            deviceName : \"Cold_Storage_9-2\",\n                            adr : data[i].adr,\n                            name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                            value : v,\n                        }\n                    }\n                }\n            }\n        }\n    }\n    if(data[i].adr == \"192.168.50.155:502:60\"){\n        for(let [k,v] of Object.entries(data[i].data)){\n            let dataFind = finded(k);\n            if(k == dataFind.name){\n                let Cold92 = k.includes(\"Storage_9-2\");\n                if(Cold92 == true){\n                    xja[\"Cold_Storage_9-2\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Cold_Storage_9-2\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }else if(k.includes(\"Storage_9-3\")){\n                    xja[\"Cold_Storage_9-3\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Cold_Storage_9-3\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }\n            }\n        }\n    }\n    if(data[i].adr == \"192.168.50.155:502:61\"){\n        for(let [k,v] of Object.entries(data[i].data)){\n            let dataFind = finded(k);\n            if(k == dataFind.name){\n                if(k.includes(\"Storage_11-1\")){\n                    xja[\"Cold_Storage_11-1\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Cold_Storage_11-1\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }else if(k.includes(\"Storage_11-2\")){\n                    xja[\"Cold_Storage_11-2\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Cold_Storage_11-2\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }\n            }\n        }\n    }\n    if(data[i].adr == \"192.168.50.155:502:62\"){\n        for(let [k,v] of Object.entries(data[i].data)){\n            let dataFind = finded(k);\n            if(k == dataFind.name){\n                if(k.includes(\"Storage_11-2\")){\n                    xja[\"Cold_Storage_11-2\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Cold_Storage_11-2\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }else if(k.includes(\"Storage_11-3\")){\n                    xja[\"Cold_Storage_11-3\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Cold_Storage_11-3\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }else if(k.includes(\"Storage_11-4\")){\n                    xja[\"Cold_Storage_11-4\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Cold_Storage_11-4\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }\n            }\n        }\n    }\n    if(data[i].adr == \"192.168.50.155:502:63\"){\n        for(let [k,v] of Object.entries(data[i].data)){\n            let dataFind = finded(k);\n            if(k == dataFind.name){\n                if(k.includes(\"Storage_11-4\")){\n                    xja[\"Cold_Storage_11-4\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Cold_Storage_11-4\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }else if(k.includes(\"Storage_11-5\")){\n                    xja[\"Cold_Storage_11-5\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Cold_Storage_11-5\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }else if(k.includes(\"Storage_8\")){\n                    xja[\"Cold_Storage_8\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Cold_Storage_8\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }\n            }\n        }\n    }\n    if(data[i].adr == \"192.168.50.155:502:64\"){\n        for(let [k,v] of Object.entries(data[i].data)){\n            let dataFind = finded(k);\n            if(k == dataFind.name){\n                if(k.includes(\"Storage_8\")){\n                    xja[\"Cold_Storage_8\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Cold_Storage_8\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }else if(k.includes(\"Storage_10\")){\n                    xja[\"Cold_Storage_10\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Cold_Storage_10\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }\n            }\n        }\n    }\n    if(data[i].adr == \"192.168.50.155:502:65\"){\n        for(let [k,v] of Object.entries(data[i].data)){\n            let dataFind = finded(k);\n            if(k == dataFind.name){\n                if(k.includes(\"Loading_3\")){\n                    xja[\"Loading_3\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Loading_3\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }else if(k.includes(\"Loading_4\")){\n                    xja[\"Loading_4\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Loading_4\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }else if(k.includes(\"Ante_Room_3\")){\n                    xja[\"Ante_Room_3\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Ante_Room_3\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }\n            }\n        }\n    }\n    if(data[i].adr == \"192.168.50.155:502:66\"){\n        for(let [k,v] of Object.entries(data[i].data)){\n            let dataFind = finded(k);\n            if(k == dataFind.name){\n                let cold9 = k.includes(\"Storage_9\");\n                let cold91 = k.includes(\"Storage_9-1\");\n                let cold92 = k.includes(\"Storage_9-2\");\n                if(cold9 == false){\n                    if(k !== \"On\" && k !== \"No-Link\"){\n                        xja[\"Ante_Room_3\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                            deviceName : \"Ante_Room_3\",\n                            adr : data[i].adr,\n                            name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                            value : v,\n                        }\n                    }\n                }\n                if(cold91 == true){\n                    xja[\"Cold_Storage_9-1\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Cold_Storage_9-1\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }else if(cold92 == true){\n                    xja[\"Cold_Storage_9-2\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Cold_Storage_9-2\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }\n            }\n        }\n    }\n    if(data[i].adr == \"192.168.50.155:502:67\"){\n        for(let [k,v] of Object.entries(data[i].data)){\n            let dataFind = finded(k);\n            if(k == dataFind.name){\n                let cold93 = k.includes(\"Storage_9-3\");\n                let cold11 = k.includes(\"Storage_11\");\n                if(cold93 == true){\n                    xja[\"Cold_Storage_9-3\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Cold_Storage_9-3\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }\n                if(k.includes(\"Storage_11-1\")){\n                    xja[\"Cold_Storage_11-1\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Cold_Storage_11-1\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }else if(k.includes(\"Storage_11-2\")){\n                    xja[\"Cold_Storage_11-2\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Cold_Storage_11-2\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }else if(k.includes(\"Storage_11-3\")){\n                    xja[\"Cold_Storage_11-3\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Cold_Storage_11-3\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }else if(k.includes(\"Storage_11-4\")){\n                    xja[\"Cold_Storage_11-4\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Cold_Storage_11-4\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }\n            }\n        }\n    }\n    if(data[i].adr == \"192.168.50.155:502:68\"){\n        for(let [k,v] of Object.entries(data[i].data)){\n            let dataFind = finded(k);\n            if(k == dataFind.name){\n                if(k.includes(\"Storage_11-5\")){\n                    xja[\"Cold_Storage_11-5\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Cold_Storage_11-5\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }else if(k.includes(\"Storage_10\")){\n                    xja[\"Cold_Storage_10\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Cold_Storage_10\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }else if(k.includes(\"Storage_8\")){\n                    xja[\"Cold_Storage_8\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Cold_Storage_8\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }else if(k.includes(\"Loading_3\")){\n                    xja[\"Loading_3\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Loading_3\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }else if(k.includes(\"Loading_4\")){\n                    xja[\"Loading_4\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Loading_4\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }\n            }\n        }\n    }\n    if(data[i].adr == \"192.168.50.155:502:69\"){\n        for(let [k,v] of Object.entries(data[i].data)){\n            let dataFind = finded(k);\n            if(k == dataFind.name){\n                let ante3 = k.includes(\"Ante_Room_3\");\n                if(ante3 == true){\n                    xja[\"Ante_Room_3\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Ante_Room_3\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }\n            }\n        }\n    }\n    if(data[i].adr == \"156\"){\n        for(let [k,v] of Object.entries(data[i].data)){\n            let dataFind = finded(k);\n            if(k == dataFind.name){\n                let fan = k.includes(\"Fan\");\n                if(fan == true){\n                    xja[\"Fan_Evap._Condenser_4\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                        deviceName : \"Fan_Evap._Condenser_4\",\n                        adr : data[i].adr,\n                        name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                        value : v,\n                    }\n                }\n            }\n        }\n    }else if(data[i].adr == \"157\"){\n        for(let [k,v] of Object.entries(data[i].data)){\n            let dataFind = finded(k);\n            if(k == dataFind.name){\n                xja[\"Fan_Evap._Condenser_4\"][k.replace(/ /g,\"_\").replace(/-/g,\"_\")] = {\n                    deviceName : \"Fan_Evap._Condenser_4\",\n                    adr : data[i].adr,\n                    name : k.replace(/ /g,\"_\").replace(/-/g,\"_\"),\n                    value : v,\n                }\n            }\n        }\n    }\n}\nmsg.payload = xja;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 430,
+        "y": 360,
+        "wires": [
+            [
+                "9f6a8876cee240bb"
+            ]
+        ]
+    },
+    {
+        "id": "9f6a8876cee240bb",
+        "type": "function",
+        "z": "8bc67e967e6baca3",
+        "name": "Set Flow Insert",
+        "func": "var output = {};\nvar blast4 = {};\nblast4[\"data\"] = {};\nvar blast5 = {};\nblast5[\"data\"] = {};\nvar blast6 = {};\nblast6[\"data\"] = {};\nvar cold91 = {};\ncold91[\"data\"] = {};\nvar cold92 = {};\ncold92[\"data\"] = {};\nvar cold93 = {};\ncold93[\"data\"] = {};\nvar cold8 = {};\ncold8[\"data\"] = {};\nvar cold10 = {};\ncold10[\"data\"] = {};\nvar cold11 = {};\ncold11[\"data\"] = {};\nvar cold12 = {};\ncold12[\"data\"] = {};\nvar cold13 = {};\ncold13[\"data\"] = {};\nvar cold14 = {};\ncold14[\"data\"] = {};\nvar cold15 = {};\ncold15[\"data\"] = {};\nvar ante3 = {};\nante3[\"data\"] = {};\nvar loading3 = {};\nloading3[\"data\"] = {};\nvar loading4 = {};\nloading4[\"data\"] = {};\nvar myCompressor = {};\nmyCompressor[\"data\"] = {};\nvar evap2000 = {};\nevap2000[\"data\"] = {};\nvar evapsec = {};\nevapsec[\"data\"] = {};\nvar myCom355 = {};\nmyCom355[\"data\"] = {};\nvar vessel = {};\nvessel[\"data\"] = {};\nvar datetime = new Date().getTime();\nvar timestamp = parseInt(datetime / 1000);\nfor(let i in msg.payload){\n    for(let [k,v] of Object.entries(msg.payload[i])){\n        if(v.deviceName == \"Blast_Freezer_4\"){\n            blast4[\"deviceName\"] = v.deviceName;\n            blast4[\"timestamp\"] = timestamp;\n            blast4[\"data\"][v.name] = v.value;\n        }else if(v.deviceName == \"Blast_Freezer_5\"){\n            blast5[\"deviceName\"] = v.deviceName;\n            blast5[\"timestamp\"] = timestamp;\n            blast5[\"data\"][v.name] = v.value;\n        }else if(v.deviceName == \"Blast_Freezer_6\"){\n            blast6[\"deviceName\"] = v.deviceName;\n            blast6[\"timestamp\"] = timestamp;\n            blast6[\"data\"][v.name] = v.value;\n        }else if(v.deviceName == \"Cold_Storage_9-1\"){\n            cold91[\"deviceName\"] = v.deviceName;\n            cold91[\"timestamp\"] = timestamp;\n            cold91[\"data\"][v.name] = v.value;\n        }else if(v.deviceName == \"Cold_Storage_9-2\"){\n            cold92[\"deviceName\"] = v.deviceName;\n            cold92[\"timestamp\"] = timestamp;\n            cold92[\"data\"][v.name] = v.value;\n        }else if(v.deviceName == \"Cold_Storage_9-3\"){\n            cold93[\"deviceName\"] = v.deviceName;\n            cold93[\"timestamp\"] = timestamp;\n            cold93[\"data\"][v.name] = v.value;\n        }else if(v.deviceName == \"Cold_Storage_8\"){\n            cold8[\"deviceName\"] = v.deviceName;\n            cold8[\"timestamp\"] = timestamp;\n            cold8[\"data\"][v.name] = v.value;\n        }else if(v.deviceName == \"Cold_Storage_10\"){\n            cold10[\"deviceName\"] = v.deviceName;\n            cold10[\"timestamp\"] = timestamp;\n            cold10[\"data\"][v.name] = v.value;\n        }else if(v.deviceName == \"Cold_Storage_11-1\"){\n            cold11[\"deviceName\"] = v.deviceName;\n            cold11[\"timestamp\"] = timestamp;\n            cold11[\"data\"][v.name] = v.value;\n        }else if(v.deviceName == \"Cold_Storage_11-2\"){\n            cold12[\"deviceName\"] = v.deviceName;\n            cold12[\"timestamp\"] = timestamp;\n            cold12[\"data\"][v.name] = v.value;\n        }else if(v.deviceName == \"Cold_Storage_11-3\"){\n            cold13[\"deviceName\"] = v.deviceName;\n            cold13[\"timestamp\"] = timestamp;\n            cold13[\"data\"][v.name] = v.value;\n        }else if(v.deviceName == \"Cold_Storage_11-4\"){\n            cold14[\"deviceName\"] = v.deviceName;\n            cold14[\"timestamp\"] = timestamp;\n            cold14[\"data\"][v.name] = v.value;\n        }else if(v.deviceName == \"Cold_Storage_11-5\"){\n            cold15[\"deviceName\"] = v.deviceName;\n            cold15[\"timestamp\"] = timestamp;\n            cold15[\"data\"][v.name] = v.value;\n        }else if(v.deviceName == \"Ante_Room_3\"){\n            ante3[\"deviceName\"] = v.deviceName;\n            ante3[\"timestamp\"] = timestamp;\n            ante3[\"data\"][v.name] = v.value;\n        }else if(v.deviceName == \"Loading_3\"){\n            loading3[\"deviceName\"] = v.deviceName;\n            loading3[\"timestamp\"] = timestamp;\n            loading3[\"data\"][v.name] = v.value;\n        }else if(v.deviceName == \"Loading_4\"){\n            loading4[\"deviceName\"] = v.deviceName;\n            loading4[\"timestamp\"] = timestamp;\n            loading4[\"data\"][v.name] = v.value;\n        }else if(v.deviceName == \"Compressor_No.4\"){\n            myCompressor[\"deviceName\"] = v.deviceName;\n            myCompressor[\"timestamp\"] = timestamp;\n            myCompressor[\"data\"][v.name !== \"No_Link\" ? v.name : v.name] = v.value;\n        }else if(v.deviceName == \"Fan_Evap._Condenser_3\"){\n            evap2000[\"deviceName\"] = v.deviceName;\n            evap2000[\"timestamp\"] = timestamp;\n            evap2000[\"data\"][v.name] = v.value;\n        }else if(v.deviceName == \"Fan_Evap._Condenser_4\"){\n            evapsec[\"deviceName\"] = v.deviceName;\n            evapsec[\"timestamp\"] = timestamp;\n            evapsec[\"data\"][v.name] = v.value;\n        }else if(v.deviceName == \"Compressor_No.3\"){\n            myCom355[\"deviceName\"] = v.deviceName;\n            myCom355[\"timestamp\"] = timestamp;\n            myCom355[\"data\"][v.name] = v.value;\n        }else{\n            vessel[\"deviceName\"] = v.deviceName;\n            vessel[\"timestamp\"] = timestamp;\n            vessel[\"data\"][v.name] = v.value;\n        }\n    }\n}\n// output = [blast4,blast5,blast6,cold91,cold92,cold93,cold8,cold10,cold11,cold12,cold13,cold14,cold15,ante3,loading3,loading4,myCompressor,evap2000,evapsec,myCom355,vessel];\nglobal.set('Fan.Evap3',evap2000);\nglobal.set(\"Fan.Evap4\",evapsec);\nglobal.set(\"Comp.3\",myCom355);\nglobal.set(\"Comp.4\",myCompressor);\nglobal.set(\"vessel3\",vessel);\n\nvar data = global.get('Data');\n\noutput[\"blast4\"] = {};\noutput[\"blast5\"] = {};\noutput[\"blast6\"] = {};\noutput[\"cold9_1\"] = {};\noutput[\"cold9_2\"] = {};\noutput[\"cold9_3\"] = {};\noutput[\"cold8\"] = {};\noutput[\"cold10\"] = {};\noutput[\"cold11\"] = {};\noutput[\"cold12\"] = {};\noutput[\"cold13\"] = {};\noutput[\"cold14\"] = {};\noutput[\"cold15\"] = {};\noutput[\"ante3\"] = {};\noutput[\"loading3\"] = {};\noutput[\"loading4\"] = {};\noutput[\"comp4\"] = {};\noutput[\"comp3\"] = {};\n\n\nfor(let index in data){\n    if(data[index].name == blast4.deviceName){\n        if(Object.keys(data[index].data) !== blast4.data){\n            output[\"blast4\"][\"deviceName\"] = blast4.deviceName;\n            output[\"blast4\"][\"adr\"] = data[index].adr;\n            output[\"blast4\"][\"data\"] = Object.assign(data[index].data,blast4.data);\n            output[\"blast4\"][\"timestamp\"] = timestamp;\n        }\n    }else if(data[index].name == blast5.deviceName){\n        if(Object.keys(data[index].data) !== blast5.data){\n            output[\"blast5\"][\"deviceName\"] = blast5.deviceName;\n            output[\"blast5\"][\"data\"] = Object.assign(data[index].data,blast5.data);\n            output[\"blast5\"][\"timestamp\"] = timestamp;\n        }\n    }else if(data[index].name == blast6.deviceName){\n        if(Object.keys(data[index].data) !== blast6.data){\n            output[\"blast6\"][\"deviceName\"] = blast6.deviceName;\n            output[\"blast6\"][\"adr\"] = data[index].adr;\n            output[\"blast6\"][\"data\"] = Object.assign(data[index].data,blast6.data);\n            output[\"blast6\"][\"timestamp\"] = timestamp;\n        }\n    }else if(data[index].name == cold91.deviceName){\n        if(Object.keys(data[index].data) !== cold91.data){\n            output[\"cold9_1\"][\"deviceName\"] = cold91.deviceName;\n            output[\"cold9_1\"][\"adr\"] = data[index].adr;\n            output[\"cold9_1\"][\"data\"] = Object.assign(data[index].data,cold91.data);\n            output[\"cold9_1\"][\"timestamp\"] = timestamp;\n        }\n    }else if(data[index].name == cold92.deviceName){\n        if(Object.keys(data[index].data) !== cold92.data){\n            output[\"cold9_2\"][\"deviceName\"] = cold92.deviceName;\n            output[\"cold9_2\"][\"adr\"] = data[index].adr;\n            output[\"cold9_2\"][\"data\"] = Object.assign(data[index].data,cold92.data);\n            output[\"cold9_2\"][\"timestamp\"] = timestamp;\n        }\n    }else if(data[index].name == cold93.deviceName){\n        if(Object.keys(data[index].data) !== cold93.data){\n            output[\"cold9_3\"][\"deviceName\"] = cold93.deviceName;\n            output[\"cold9_3\"][\"adr\"] = data[index].adr;\n            output[\"cold9_3\"][\"data\"] = Object.assign(data[index].data,cold93.data);\n            output[\"cold9_3\"][\"timestamp\"] = timestamp;\n        }\n    }else if(data[index].name == cold8.deviceName){\n        if(Object.keys(data[index].data) !== cold8.data){\n            output[\"cold8\"][\"deviceName\"] = cold8.deviceName;\n            output[\"cold8\"][\"adr\"] = data[index].adr;\n            output[\"cold8\"][\"data\"] = Object.assign(data[index].data,cold8.data);\n            output[\"cold8\"][\"timestamp\"] = timestamp;\n        }\n    }else if(data[index].name == cold10.deviceName){\n        if(Object.keys(data[index].data) !== cold10.data){\n            output[\"cold10\"][\"deviceName\"] = cold10.deviceName;\n            output[\"cold10\"][\"adr\"] = data[index].adr;\n            output[\"cold10\"][\"data\"] = Object.assign(data[index].data,cold10.data);\n            output[\"cold10\"][\"timestamp\"] = timestamp;\n        }\n    }else if(data[index].name == cold11.deviceName){\n        if(Object.keys(data[index].data) !== cold11.data){\n            output[\"cold11\"][\"deviceName\"] = cold11.deviceName;\n            output[\"cold11\"][\"adr\"] = data[index].adr;\n            output[\"cold11\"][\"data\"] = Object.assign(data[index].data,cold11.data);\n            output[\"cold11\"][\"timestamp\"] = timestamp;\n        }\n    }else if(data[index].name == cold12.deviceName){\n        if(Object.keys(data[index].data) !== cold12.deviceName){\n            output[\"cold12\"][\"deviceName\"] = cold12.deviceName;\n            output[\"cold12\"][\"adr\"] = data[index].adr;\n            output[\"cold12\"][\"data\"] = Object.assign(data[index].data,cold12.data);\n            output[\"cold12\"][\"timestamp\"] = timestamp;\n        }\n    }else if(data[index].name == cold13.deviceName){\n        if(Object.keys(data[index].data) !== cold13.deviceName){\n            output[\"cold13\"][\"deviceName\"] = cold13.deviceName;\n            output[\"cold13\"][\"adr\"] = data[index].adr;\n            output[\"cold13\"][\"data\"] = Object.assign(data[index].data,cold13.data);\n            output[\"cold13\"][\"timestamp\"] = timestamp;\n        }\n    }else if(data[index].name == cold14.deviceName){\n        if(Object.keys(data[index].data) !== cold14.data){\n            output[\"cold14\"][\"deviceName\"] = cold14.deviceName;\n            output[\"cold14\"][\"adr\"] = data[index].adr;\n            output[\"cold14\"][\"data\"] = Object.assign(data[index].data,cold14.data);\n            output[\"cold14\"][\"timestamp\"] = timestamp;\n        }\n    }else if(data[index].name == cold15.deviceName){\n        if(Object.keys(data[index].data) !== cold15.data){\n            output[\"cold15\"][\"deviceName\"] = cold15.deviceName;\n            output[\"cold15\"][\"adr\"] = data[index].adr;\n            output[\"cold15\"][\"data\"] = Object.assign(data[index].data,cold15.data);\n            output[\"cold15\"][\"timestamp\"] = timestamp;\n        }\n    }else if(data[index].name == ante3.deviceName){\n        if(Object.keys(data[index].data) !== ante3.data){\n            output[\"ante3\"][\"deviceName\"] = ante3.deviceName;\n            output[\"ante3\"][\"adr\"] = data[index].adr;\n            output[\"ante3\"][\"data\"] = Object.assign(data[index].data,ante3.data);\n            output[\"ante3\"][\"timestamp\"] = timestamp;\n        }\n    }else if(data[index].name == loading3.deviceName){\n        if(Object.keys(data[index].data) !== loading3.data){\n            output[\"loading3\"][\"deviceName\"] = loading3.deviceName;\n            output[\"loading3\"][\"adr\"] = data[index].adr;\n            output[\"loading3\"][\"data\"] = Object.assign(data[index].data,loading3.data);\n            output[\"loading3\"][\"timestamp\"] = timestamp;\n        }\n    }else if(data[index].name == loading4.deviceName){\n        if(Object.keys(data[index].data) !== loading4.data){\n            output[\"loading4\"][\"deviceName\"] = loading4.deviceName;\n            output[\"loading4\"][\"adr\"] = data[index].adr;\n            output[\"loading4\"][\"data\"] = Object.assign(data[index].data,loading4.data);\n            output[\"loading4\"][\"timestamp\"] = timestamp;\n        }\n    }else if(data[index].name == myCompressor.deviceName){\n        if(Object.keys(data[index].data) !== myCompressor.data){\n            output[\"comp4\"][\"deviceName\"] = data[index].name;\n            output[\"comp4\"][\"adr\"] = data[index].adr;\n            output[\"comp4\"][\"data\"] = Object.assign(data[index].data,myCompressor.data);\n            output[\"comp4\"][\"timestamp\"] = timestamp;\n        }\n    }else if(data[index].name == myCom355.deviceName){\n        if(Object.keys(data[index].data) !== myCom355.data){\n            output[\"comp3\"][\"deviceName\"] = data[index].name;\n            output[\"comp3\"][\"adr\"] = data[index].adr;\n            output[\"comp3\"][\"data\"] = Object.assign(data[index].data,myCom355.data);\n            output[\"comp3\"][\"timestamp\"] = timestamp;\n        }\n    }else{\n        output[index] = {};\n        output[index][\"deviceName\"] = data[index].name;\n        output[index][\"adr\"] = data[index].adr;\n        output[index][\"data\"] = data[index].data;\n        output[index][\"timestamp\"] = timestamp;\n    }\n}\n\nglobal.set(\"Xja\",Object.values(output));\nmsg.payload = Object.values(output);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 620,
+        "y": 360,
+        "wires": [
+            [
+                "3484255fb6d763be"
+            ]
+        ]
+    },
+    {
+        "id": "3484255fb6d763be",
+        "type": "debug",
+        "z": "8bc67e967e6baca3",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 790,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "4ecb8e791b9e8656",
+        "type": "link in",
+        "z": "8bc67e967e6baca3",
+        "name": "filter touch",
+        "links": [
+            "e88cbda13ef0b8b0",
+            "0d21981895155e3d"
+        ],
+        "x": 145,
+        "y": 280,
+        "wires": [
+            [
+                "714eb2eca75613cb"
+            ]
+        ]
+    },
+    {
+        "id": "714eb2eca75613cb",
+        "type": "cronplus",
+        "z": "8bc67e967e6baca3",
+        "name": "",
+        "outputField": "payload",
+        "timeZone": "",
+        "persistDynamic": false,
+        "commandResponseMsgOutput": "output1",
+        "outputs": 1,
+        "options": [
+            {
+                "name": "schedule1",
+                "topic": "topic1",
+                "payloadType": "default",
+                "payload": "",
+                "expressionType": "cron",
+                "expression": "0 * * * * *",
+                "location": "",
+                "offset": "0",
+                "solarType": "all",
+                "solarEvents": "sunrise,sunset"
+            }
+        ],
+        "x": 260,
+        "y": 280,
+        "wires": [
+            [
+                "f2862dc665154044"
+            ]
+        ]
+    },
+    {
+        "id": "adf472334db96644",
+        "type": "cronplus",
+        "z": "8bc67e967e6baca3",
+        "name": "",
+        "outputField": "payload",
+        "timeZone": "",
+        "persistDynamic": false,
+        "commandResponseMsgOutput": "output1",
+        "outputs": 1,
+        "options": [
+            {
+                "name": "schedule1",
+                "topic": "topic1",
+                "payloadType": "default",
+                "payload": "",
+                "expressionType": "cron",
+                "expression": "0 * * * * *",
+                "location": "",
+                "offset": "0",
+                "solarType": "all",
+                "solarEvents": "sunrise,sunset"
+            }
+        ],
+        "x": 280,
+        "y": 360,
+        "wires": [
+            [
+                "73be0e6303c1c7a3"
+            ]
+        ]
+    },
+    {
+        "id": "19d360d520871e4e",
+        "type": "link in",
+        "z": "8bc67e967e6baca3",
+        "name": "filter data",
+        "links": [
+            "e88cbda13ef0b8b0",
+            "84b558f62d282d72"
+        ],
+        "x": 165,
+        "y": 360,
+        "wires": [
+            [
+                "adf472334db96644"
+            ]
+        ]
+    },
+    {
+        "id": "0cfde5851a60af23",
+        "type": "catch",
+        "z": "8bc67e967e6baca3",
+        "name": "",
+        "scope": [
+            "f2862dc665154044",
+            "73be0e6303c1c7a3",
+            "7eb5f7e6fed580f2",
+            "9f6a8876cee240bb"
+        ],
+        "uncaught": false,
+        "x": 310,
+        "y": 220,
+        "wires": [
+            [
+                "e157d18246b85af3"
+            ]
+        ]
+    },
+    {
+        "id": "e157d18246b85af3",
+        "type": "link out",
+        "z": "8bc67e967e6baca3",
+        "name": "",
+        "mode": "link",
+        "links": [
+            "a90dad1aa89bcfbf"
+        ],
+        "x": 415,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "a15101d814bae221",
+        "type": "modbus-client",
+        "name": "JWD Suwinthawong",
+        "clienttype": "tcp",
+        "bufferCommands": true,
+        "stateLogEnabled": false,
+        "queueLogEnabled": false,
+        "tcpHost": "127.0.0.1",
+        "tcpPort": "502",
+        "tcpType": "DEFAULT",
+        "serialPort": "/dev/ttyUSB",
+        "serialType": "RTU-BUFFERD",
+        "serialBaudrate": "9600",
+        "serialDatabits": "8",
+        "serialStopbits": "1",
+        "serialParity": "none",
+        "serialConnectionDelay": "100",
+        "serialAsciiResponseStartDelimiter": "0x3A",
+        "unit_id": "1",
+        "commandDelay": "40",
+        "clientTimeout": "1000",
+        "reconnectOnTimeout": true,
+        "reconnectTimeout": "2000",
+        "parallelUnitIdsAllowed": false
+    }
+]
